@@ -475,12 +475,12 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** every component references the same values and there's one place to update colors.
 
 **Acceptance Criteria:**
-- [ ] `lib/tokens.ts` (or `tailwind.config.ts` theme extension) defines:
+- [x] `lib/tokens.ts` (or `tailwind.config.ts` theme extension) defines:
   - **Backgrounds**: `#0A0A0F` (bg), `#13131A` (surface), `#1E1E2E` (border)
   - **Provider badge colors**: Claude `#D97706`, OpenAI `#10B981`, Groq `#8B5CF6`
   - **Edge colors by relationship**: amplifies=red, informs=blue, shapes=purple, enables=green, activates=orange
-- [ ] All components import from this single source — no hardcoded hex values in component files
-- [ ] Tailwind dark mode class applied at root (`<html class="dark">`)
+- [x] All components import from this single source — no hardcoded hex values in component files
+- [x] Tailwind dark mode class applied at root (`<html class="dark">`)
 
 **Effort:** XS (15 min)
 **Depends on:** US-01
