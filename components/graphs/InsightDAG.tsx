@@ -13,29 +13,42 @@ import {
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft } from 'lucide-react'
 import { InsightNode, type InsightNodeData } from './InsightNode'
-import { buildInsightElements } from '@/lib/graph-utils'
+import { ProductNode } from './ProductNode'
+import { SegmentNode, type SegmentNodeData } from './SegmentNode'
+import { buildInsightElements, getLayoutedInsightElements } from '@/lib/graph-utils'
+import type { Provider } from '@/lib/langgraph/providers'
 import type { PromptType, SegmentSession } from '@/lib/types'
 
-const nodeTypes = { insightNode: InsightNode }
+const PRODUCT_ID = '__dag_product__'
+const SEGMENT_ID = '__dag_segment__'
+
+const nodeTypes = {
+  insightNode: InsightNode,
+  productNode: ProductNode,
+  segmentNode: SegmentNode,
+}
 
 interface Props {
+  product: string
+  objective: string
   segment: string
+  provider: Provider
   session: SegmentSession
   selectedNode: string | null
   onNodeClick: (promptKey: PromptType) => void
   onBack: () => void
 }
 
-export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack }: Props) {
-  const { nodes: baseNodes, edges } = useMemo(
+export function InsightDAG({ product, objective, segment, provider, session, selectedNode, onNodeClick, onBack }: Props) {
+  const { nodes: baseInsightNodes, edges: insightEdges, rootIds } = useMemo(
     () => buildInsightElements(segment),
     [segment]
   )
 
-  // Merge live session status + content into nodes
-  const nodes: Node[] = useMemo(
+  // Merge live session status into insight nodes
+  const insightNodes: Node[] = useMemo(
     () =>
-      baseNodes.map((n) => {
+      baseInsightNodes.map((n) => {
         const promptKey = (n.data as InsightNodeData).promptKey
         const content = session.insights?.[promptKey] ?? null
         const status = session.status === 'ready' ? 'ready'
@@ -48,22 +61,70 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
           data: { ...n.data, status, content } as InsightNodeData,
         }
       }),
-    [baseNodes, session, selectedNode]
+    [baseInsightNodes, session, selectedNode]
   )
 
-  // Enrich edges with dashed styles from tokens (already set in buildInsightElements)
+  // Build full node + edge list including product and segment header nodes
+  const { allNodes, allEdges } = useMemo(() => {
+    const productNode: Node = {
+      id: PRODUCT_ID,
+      type: 'productNode',
+      position: { x: 0, y: 0 },
+      data: { label: product || 'Product', objective },
+      selectable: false,
+    }
+
+    const segmentStatus = session.status === 'loading' ? 'loading'
+      : session.status === 'ready' ? 'ready'
+      : session.status === 'error' ? 'error'
+      : 'idle'
+
+    const segmentNode: Node = {
+      id: SEGMENT_ID,
+      type: 'segmentNode',
+      position: { x: 0, y: 0 },
+      data: { label: segment, status: segmentStatus, provider } satisfies SegmentNodeData,
+      selectable: false,
+    }
+
+    const topEdges: Edge[] = [
+      {
+        id: '__prod-seg__',
+        source: PRODUCT_ID,
+        target: SEGMENT_ID,
+        type: 'straight',
+        style: { stroke: '#534AB750', strokeDasharray: '4 4', strokeWidth: 1 },
+      },
+      ...rootIds.map((rootId) => ({
+        id: `__seg-${rootId}__`,
+        source: SEGMENT_ID,
+        target: rootId,
+        type: 'straight',
+        style: { stroke: '#2E2E4280', strokeDasharray: '4 4', strokeWidth: 1 },
+      })),
+    ]
+
+    // Re-layout everything together so dagre ranks the header nodes above insight nodes
+    const allRaw: Node[] = [productNode, segmentNode, ...insightNodes]
+    const allEdgesRaw: Edge[] = [...topEdges, ...insightEdges]
+    const laid = getLayoutedInsightElements(allRaw, allEdgesRaw)
+
+    return { allNodes: laid, allEdges: allEdgesRaw }
+  }, [product, objective, segment, provider, session.status, insightNodes, rootIds, insightEdges])
+
   const styledEdges: Edge[] = useMemo(
     () =>
-      edges.map((e) => ({
+      allEdges.map((e) => ({
         ...e,
         labelStyle: { fill: '#7A7A8C', fontSize: 10 },
         labelBgStyle: { fill: '#0A0A0F', padding: 2 },
       })),
-    [edges]
+    [allEdges]
   )
 
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
+      if (node.id === PRODUCT_ID || node.id === SEGMENT_ID) return
       const promptKey = (node.data as InsightNodeData).promptKey
       if (session.status === 'ready') onNodeClick(promptKey)
     },
@@ -86,16 +147,16 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
         onMouseLeave={(e) => (e.currentTarget.style.color = '#7A7A8C')}
       >
         <ArrowLeft size={12} />
-        {segment}
+        Back
       </button>
 
       <ReactFlow
-        nodes={nodes}
+        nodes={allNodes}
         edges={styledEdges}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
         fitView
-        fitViewOptions={{ padding: 0.25 }}
+        fitViewOptions={{ padding: 0.2 }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable

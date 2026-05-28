@@ -34,21 +34,22 @@ export function getLayoutedInsightElements(
   g.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 60 })
   g.setDefaultEdgeLabel(() => ({}))
 
-  nodes.forEach((n) => g.setNode(n.id, { width: 180, height: 72 }))
+  nodes.forEach((n) => {
+    const w = n.type === 'productNode' ? 200 : n.type === 'segmentNode' ? 220 : 180
+    const h = n.type === 'productNode' ? 80 : 72
+    g.setNode(n.id, { width: w, height: h })
+  })
   edges.forEach((e) => g.setEdge(e.source, e.target))
   dagre.layout(g)
 
-  return nodes.map((n) => ({
-    ...n,
-    position: {
-      x: g.node(n.id).x - 90,
-      y: g.node(n.id).y - 36,
-    },
-  }))
+  return nodes.map((n) => {
+    const { x, y, width, height } = g.node(n.id)
+    return { ...n, position: { x: x - width / 2, y: y - height / 2 } }
+  })
 }
 
 /** Builds insight nodes + causal edges for a given segment */
-export function buildInsightElements(segmentId: string): { nodes: Node[]; edges: Edge[] } {
+export function buildInsightElements(segmentId: string): { nodes: Node[]; edges: Edge[]; rootIds: string[] } {
   const promptKeys = Object.keys(PROMPT_CONFIG) as PromptType[]
 
   const nodes: Node[] = promptKeys.map((key) => {
@@ -101,6 +102,10 @@ export function buildInsightElements(segmentId: string): { nodes: Node[]; edges:
     return true
   })
 
+  // Root insight nodes = those with no incoming edges from other insight nodes
+  const targetIds = new Set(uniqueEdges.map((e) => e.target))
+  const rootIds = nodes.map((n) => n.id).filter((id) => !targetIds.has(id))
+
   const layoutedNodes = getLayoutedInsightElements(nodes, uniqueEdges)
-  return { nodes: layoutedNodes, edges: uniqueEdges }
+  return { nodes: layoutedNodes, edges: uniqueEdges, rootIds }
 }

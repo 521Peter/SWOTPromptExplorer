@@ -206,7 +206,10 @@ export default function Home() {
                 <ResizablePanelGroup direction="horizontal" className="h-full">
                   <ResizablePanel defaultSize={72} minSize={40}>
                     <InsightDAG
+                      product={product}
+                      objective={objective}
                       segment={state.activeSegment}
+                      provider={state.provider}
                       session={activeSession}
                       selectedNode={state.selectedNode}
                       onNodeClick={(key: PromptType) => selectNode(key)}
