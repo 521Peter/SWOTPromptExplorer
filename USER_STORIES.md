@@ -243,15 +243,15 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can visualize all segments at a glance before drilling in.
 
 **Acceptance Criteria:**
-- [ ] `components/graphs/SegmentGraph.tsx` renders segments as custom `SegmentNode` nodes
-- [ ] Canvas background: `#0A0A0F`
-- [ ] Nodes positioned radially using `getRadialPosition(i, total)`
-- [ ] Edges connect segments that share behavioral traits; solid `0.5px` muted color
-- [ ] Each node displays: segment name, status badge (`idle` / `loading` / `ready`), provider badge (when ready)
-- [ ] `@xyflow/react` canvas fills the main area; sidebar is separate
-- [ ] `fitView` called after nodes mount
-- [ ] ReactFlow minimap enabled (bottom-right corner)
-- [ ] ReactFlow controls enabled (zoom in/out/reset)
+- [x] `components/graphs/SegmentGraph.tsx` renders segments as custom `SegmentNode` nodes
+- [x] Canvas background: `#0A0A0F`
+- [x] Nodes positioned radially using `getRadialPosition(i, total)`
+- [x] Edges connect segments that share behavioral traits; solid `0.5px` muted color
+- [x] Each node displays: segment name, status badge (`idle` / `loading` / `ready`), provider badge (when ready)
+- [x] `@xyflow/react` canvas fills the main area; sidebar is separate
+- [x] `fitView` called after nodes mount
+- [x] ReactFlow minimap enabled (bottom-right corner)
+- [x] ReactFlow controls enabled (zoom in/out/reset)
 
 **Effort:** M (45 min)
 **Depends on:** US-12
@@ -264,11 +264,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can tell at a glance which segments are ready to explore.
 
 **Acceptance Criteria:**
-- [ ] `idle` → neutral border, muted text, no badge
-- [ ] `loading` → pulsing ring animation (Tailwind `animate-pulse`), spinner icon
-- [ ] `ready` → colored border matching provider color, provider badge showing which provider was used
-- [ ] `error` → red border, warning icon, hover shows error message
-- [ ] Status transitions are smooth (no flash/jump)
+- [x] `idle` → neutral border, muted text, no badge
+- [x] `loading` → pulsing ring animation (Tailwind `animate-pulse`), spinner icon
+- [x] `ready` → colored border matching provider color, provider badge showing which provider was used
+- [x] `error` → red border, warning icon, hover shows error message
+- [x] Status transitions are smooth (no flash/jump)
 
 **Effort:** S (20 min)
 **Depends on:** US-13
