@@ -4,7 +4,7 @@ import { useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
-import { ScrollArea } from '@/components/ui/scroll-area'
+
 import { PROMPT_CONFIG } from '@/constants/prompt-config'
 import type { PromptType } from '@/lib/types'
 
@@ -95,7 +95,7 @@ export function InsightPanel({ promptKey, content, onClose }: Props) {
           </div>
 
           {/* Markdown content */}
-          <ScrollArea className="flex-1">
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
             <div className="p-5 prose prose-invert prose-sm max-w-none">
               {content ? (
                 <ReactMarkdown
@@ -147,7 +147,7 @@ export function InsightPanel({ promptKey, content, onClose }: Props) {
                 <p style={{ color: '#5A5A6C', fontSize: 13 }}>No content yet.</p>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </motion.aside>
       )}
     </AnimatePresence>
