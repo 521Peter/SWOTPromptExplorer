@@ -96,7 +96,7 @@ export function InsightPanel({ promptKey, content, onClose }: Props) {
 
           {/* Markdown content */}
           <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-            <div className="p-5 prose prose-invert prose-sm max-w-none">
+            <div className="px-5 pt-5 pb-12 prose prose-invert prose-sm max-w-none">
               {content ? (
                 <ReactMarkdown
                   components={{
