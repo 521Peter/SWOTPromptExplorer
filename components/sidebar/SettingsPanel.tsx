@@ -5,6 +5,7 @@ import { Settings, X, Check, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { saveKeys, loadKeys, clearKeys, saveProvider } from '@/lib/settings/keys'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
+import { OPENROUTER_MODELS } from '@/constants/openrouter-models'
 
 const PROVIDERS: {
   id: Provider
@@ -20,14 +21,6 @@ const PROVIDERS: {
   { id: 'groq',       keyId: 'groq',       label: 'Groq',       badge: 'Llama',       placeholder: 'gsk_...',    color: '#F97316' },
 ]
 
-const OPENROUTER_MODELS = [
-  { id: 'openai/gpt-4o-mini',               label: 'GPT-4o Mini (OpenAI)' },
-  { id: 'openai/gpt-4o',                    label: 'GPT-4o (OpenAI)' },
-  { id: 'meta-llama/llama-3.1-8b-instruct', label: 'Llama 3.1 8B (Meta)' },
-  { id: 'mistralai/mistral-7b-instruct',    label: 'Mistral 7B' },
-  { id: 'google/gemini-flash-1.5',          label: 'Gemini Flash 1.5' },
-  { id: 'deepseek/deepseek-chat',           label: 'DeepSeek Chat' },
-]
 
 interface Props {
   provider: Provider

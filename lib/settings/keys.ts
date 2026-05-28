@@ -1,5 +1,6 @@
 import type { ApiKeys } from '@/lib/types'
 import type { Provider } from '@/lib/langgraph/providers'
+import { VALID_OPENROUTER_MODEL_IDS, DEFAULT_OPENROUTER_MODEL } from '@/constants/openrouter-models'
 
 const STORAGE_KEY = 'swot_api_keys'
 const PROVIDER_KEY = 'swot_active_provider'
@@ -42,7 +43,10 @@ export function loadKeys(): Partial<ApiKeys> {
       openai:          stored.openai         || defaults.openai,
       groq:            stored.groq           || defaults.groq,
       openrouter:      stored.openrouter     || defaults.openrouter,
-      openrouterModel: stored.openrouterModel ?? defaults.openrouterModel,
+      openrouterModel:
+        stored.openrouterModel && VALID_OPENROUTER_MODEL_IDS.has(stored.openrouterModel)
+          ? stored.openrouterModel
+          : DEFAULT_OPENROUTER_MODEL,
     }
   } catch {
     return envDefaults()

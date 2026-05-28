@@ -138,7 +138,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
             padding: '4px 8px',
           }}
         >
-          {d.error}
+          {d.error.split('\n')[0].replace(/\s*Troubleshooting URL:.*$/, '').trim()}
         </div>
       )}
 
