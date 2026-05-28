@@ -124,17 +124,18 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
       <div className="flex flex-col gap-5 p-4 flex-1 overflow-y-auto">
         {/* Product */}
         <SidebarSection label="Product">
-          <input
+          <textarea
             value={product}
-            onChange={(e) => setProduct(e.target.value)}
+            onChange={(e) => { setProduct(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
             placeholder="e.g. Electric Cars"
-            className="w-full px-3 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors"
+            rows={1}
+            className="w-full px-3 py-2 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors resize-none overflow-hidden"
             style={{
-              height: 34,
               background: '#0D0D14',
               border: '1px solid #252535',
               color: '#E6E6EC',
               fontSize: 13,
+              lineHeight: '1.5',
             }}
             onFocus={(e) => (e.currentTarget.style.borderColor = '#534AB7')}
             onBlur={(e) => (e.currentTarget.style.borderColor = '#252535')}
@@ -143,17 +144,18 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
 
         {/* Objective */}
         <SidebarSection label="Objective">
-          <input
+          <textarea
             value={objective}
-            onChange={(e) => setObjective(e.target.value)}
+            onChange={(e) => { setObjective(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
             placeholder="e.g. Increase Awareness"
-            className="w-full px-3 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors"
+            rows={1}
+            className="w-full px-3 py-2 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors resize-none overflow-hidden"
             style={{
-              height: 34,
               background: '#0D0D14',
               border: '1px solid #252535',
               color: '#E6E6EC',
               fontSize: 13,
+              lineHeight: '1.5',
             }}
             onFocus={(e) => (e.currentTarget.style.borderColor = '#534AB7')}
             onBlur={(e) => (e.currentTarget.style.borderColor = '#252535')}
