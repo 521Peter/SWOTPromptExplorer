@@ -102,13 +102,14 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable
+        proOptions={{ hideAttribution: true }}
         style={{ background: '#0A0A0F' }}
       >
         <Background
           variant={BackgroundVariant.Dots}
-          color="rgba(255,255,255,0.04)"
-          gap={24}
-          size={1}
+          color="rgba(255,255,255,0.1)"
+          gap={28}
+          size={1.2}
         />
         <Controls style={{ background: '#13131A', border: '0.5px solid #1E1E2E' }} />
         <MiniMap

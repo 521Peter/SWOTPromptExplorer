@@ -125,6 +125,11 @@
     @apply bg-background text-foreground;
     background-color: #0A0A0F;
     color: #E6E6EC;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;

@@ -67,51 +67,57 @@ export function Sidebar({ onRun, isRunning }: Props) {
     <aside
       className="flex flex-col flex-shrink-0 h-full"
       style={{
-        width: 220,
+        width: 232,
         background: '#13131A',
-        borderRight: '0.5px solid #1E1E2E',
+        borderRight: '1px solid #1E1E2E',
         color: '#E6E6EC',
         fontSize: 13,
       }}
     >
       {/* Logo row */}
       <div
-        className="flex items-center justify-between px-4 py-3"
-        style={{ borderBottom: '0.5px solid #1E1E2E' }}
+        className="flex items-center justify-between px-4"
+        style={{ borderBottom: '1px solid #1E1E2E', height: 48, flexShrink: 0 }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <div
-            className="flex items-center justify-center text-white text-xs font-semibold"
+            className="flex items-center justify-center text-white font-bold"
             style={{
-              width: 18,
-              height: 18,
-              borderRadius: 5,
-              background: 'linear-gradient(135deg, #534AB7, #6B62D1)',
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              background: 'linear-gradient(135deg, #534AB7, #7B6FE0)',
+              fontSize: 11,
+              letterSpacing: '-0.5px',
             }}
           >
             S
           </div>
-          <span className="text-sm font-medium tracking-tight">
-            swot<span style={{ color: '#7A7A8C' }}>explorer</span>
+          <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: '-0.2px', color: '#D0D0DC' }}>
+            swot<span style={{ color: '#555567', fontWeight: 400 }}>explorer</span>
           </span>
         </div>
         <SettingsPanel />
       </div>
 
       {/* Form body */}
-      <div className="flex flex-col gap-4 p-3 flex-1 overflow-y-auto">
+      <div className="flex flex-col gap-5 p-4 flex-1 overflow-y-auto">
         {/* Product */}
         <SidebarSection label="Product">
           <input
             value={product}
             onChange={(e) => setProduct(e.target.value)}
             placeholder="e.g. Electric Cars"
-            className="w-full h-8 px-3 rounded-lg text-xs outline-none"
+            className="w-full px-3 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors"
             style={{
-              background: '#17171F',
-              border: '0.5px solid #1E1E2E',
+              height: 34,
+              background: '#0D0D14',
+              border: '1px solid #252535',
               color: '#E6E6EC',
+              fontSize: 13,
             }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = '#534AB7')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = '#252535')}
           />
         </SidebarSection>
 
@@ -121,12 +127,16 @@ export function Sidebar({ onRun, isRunning }: Props) {
             value={objective}
             onChange={(e) => setObjective(e.target.value)}
             placeholder="e.g. Increase Awareness"
-            className="w-full h-8 px-3 rounded-lg text-xs outline-none"
+            className="w-full px-3 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors"
             style={{
-              background: '#17171F',
-              border: '0.5px solid #1E1E2E',
+              height: 34,
+              background: '#0D0D14',
+              border: '1px solid #252535',
               color: '#E6E6EC',
+              fontSize: 13,
             }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = '#534AB7')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = '#252535')}
           />
         </SidebarSection>
 
@@ -166,25 +176,35 @@ export function Sidebar({ onRun, isRunning }: Props) {
 
             {/* Add segment input */}
             {segments.length < 6 && (
-              <div className="flex items-center gap-1 mt-1">
+              <div className="flex items-center gap-1.5 mt-1">
                 <input
                   value={segmentInput}
                   onChange={(e) => setSegmentInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Add segment…"
-                  className="flex-1 h-7 px-2 rounded-md text-xs outline-none"
+                  className="flex-1 px-2.5 rounded-md outline-none placeholder-[#3A3A4C]"
                   style={{
-                    background: '#17171F',
-                    border: '0.5px solid #1E1E2E',
+                    height: 30,
+                    background: '#0D0D14',
+                    border: '1px solid #252535',
                     color: '#E6E6EC',
+                    fontSize: 12,
                   }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#534AB7')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = '#252535')}
                 />
                 <button
                   onClick={addSegment}
-                  className="flex items-center justify-center h-7 w-7 rounded-md transition-colors"
-                  style={{ background: '#17171F', border: '0.5px solid #1E1E2E' }}
+                  className="flex items-center justify-center rounded-md transition-colors hover:bg-[#1B1B26]"
+                  style={{
+                    width: 30,
+                    height: 30,
+                    background: '#0D0D14',
+                    border: '1px solid #252535',
+                    flexShrink: 0,
+                  }}
                 >
-                  <Plus size={11} color="#7A7A8C" />
+                  <Plus size={12} color="#6B6B80" />
                 </button>
               </div>
             )}
@@ -193,19 +213,22 @@ export function Sidebar({ onRun, isRunning }: Props) {
       </div>
 
       {/* Run CTA */}
-      <div className="p-3" style={{ borderTop: '0.5px solid #1E1E2E' }}>
+      <div className="p-4" style={{ borderTop: '1px solid #1E1E2E' }}>
         {!hasKeyForProvider ? (
-          <p className="text-center text-xs" style={{ color: '#7A7A8C' }}>
-            ⚙ Add a key in Settings to get started
+          <p className="text-center" style={{ color: '#5A5A6C', fontSize: 12 }}>
+            Open Settings to add an API key
           </p>
         ) : (
           <button
             onClick={handleRun}
             disabled={!canRun}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-white transition-opacity disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-2 rounded-lg font-medium text-white transition-all disabled:opacity-35 hover:brightness-110 active:scale-[0.98]"
             style={{
-              background: '#534AB7',
-              border: '0.5px solid #6B62D1',
+              height: 36,
+              background: 'linear-gradient(135deg, #534AB7, #6B62D1)',
+              border: '1px solid #7B6FE0',
+              fontSize: 13,
+              letterSpacing: '0.01em',
             }}
           >
             <Play size={12} fill="white" stroke="white" strokeWidth={0} />
@@ -221,13 +244,13 @@ function SidebarSection({ label, children }: { label: string; children: React.Re
   return (
     <div>
       <div
-        className="mb-1.5 px-0.5"
+        className="mb-2"
         style={{
-          fontSize: 10,
-          fontWeight: 500,
-          color: '#5A5A6C',
+          fontSize: 11,
+          fontWeight: 600,
+          color: '#6B6B80',
           textTransform: 'uppercase',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.08em',
         }}
       >
         {label}

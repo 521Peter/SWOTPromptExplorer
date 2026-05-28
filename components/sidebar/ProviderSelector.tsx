@@ -58,25 +58,30 @@ export function ProviderSelector({
               disabled={!hasKey}
               onClick={() => hasKey && onProviderChange(p.id)}
               title={!hasKey ? 'Add key in Settings →' : p.badge}
-              className="flex items-center justify-between px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+              className="flex items-center justify-between px-3 rounded-lg font-medium transition-all"
               style={{
-                background: isActive ? '#1B1B25' : '#17171F',
-                border: `0.5px solid ${isActive ? '#2A2A3D' : '#1E1E2E'}`,
-                color: hasKey ? '#E6E6EC' : '#5A5A6C',
-                opacity: hasKey ? 1 : 0.6,
+                height: 34,
+                background: isActive ? 'rgba(83,74,183,0.12)' : '#0D0D14',
+                border: `1px solid ${isActive ? color : '#252535'}`,
+                borderLeft: isActive ? `3px solid ${color}` : `3px solid transparent`,
+                color: isActive ? '#E6E6EC' : (hasKey ? '#A0A0B0' : '#4A4A5A'),
+                opacity: hasKey ? 1 : 0.5,
                 cursor: hasKey ? 'pointer' : 'not-allowed',
+                fontSize: 13,
               }}
             >
               <span className="flex items-center gap-2">
                 <span
-                  className="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: color }}
+                  className="inline-block rounded-full flex-shrink-0"
+                  style={{ width: 7, height: 7, background: hasKey ? color : '#3A3A4C' }}
                 />
                 {p.label}
               </span>
               <span className="flex items-center gap-1">
-                <span style={{ color: '#7A7A8C', fontSize: 10 }}>{p.badge}</span>
-                {!hasKey && <Lock size={10} color="#5A5A6C" />}
+                {!hasKey && <Lock size={10} color="#4A4A5A" />}
+                {hasKey && !isActive && (
+                  <span style={{ color: '#4A4A5A', fontSize: 10 }}>{p.badge}</span>
+                )}
               </span>
             </button>
           )
