@@ -58,22 +58,6 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         position: 'relative',
       }}
     >
-      {/* Pulsing dot for loading state */}
-      {d.status === 'loading' && (
-        <span
-          className="animate-pulse"
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 12,
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: providerColor,
-          }}
-        />
-      )}
-
       {/* Row 1: label */}
       <div
         style={{
@@ -98,27 +82,21 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         {d.label}
       </div>
 
-      {/* Row 2: provider pill + status */}
+      {/* Row 2: status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            padding: '1px 7px',
-            borderRadius: 999,
-            background: 'rgba(255,255,255,0.03)',
-            border: '0.5px solid #1E1E2E',
-            color: '#7A7A8C',
-            fontSize: 10,
-            fontWeight: 500,
-          }}
-        >
+        {d.status === 'loading' && (
           <span
-            style={{ width: 5, height: 5, borderRadius: '50%', background: providerColor }}
+            className="animate-spin"
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              border: `2px solid ${providerColor}30`,
+              borderTopColor: providerColor,
+              flexShrink: 0,
+            }}
           />
-          {d.provider}
-        </span>
+        )}
         <span style={{ fontSize: 10, fontWeight: 500, color: statusColor, letterSpacing: 0.2, textTransform: 'uppercase' }}>
           {statusText}
         </span>
