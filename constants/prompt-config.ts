@@ -42,7 +42,7 @@ Be concrete, not generic. Markdown bullet list.`,
       `Product: "${p}". Objective: "${o}".
 What are the key weaknesses of "${p}" for the "${s}" segment?
 Be honest and specific. Markdown bullet list.`,
-    causalEdges: [{ from: 'threats', label: 'amplifies' }],
+    causalEdges: [],
   },
 
   opportunities: {
@@ -75,7 +75,7 @@ Include competitive, regulatory, and behavioral risks. Markdown bullet list.`,
       `Product: "${p}". Objective: "${o}".
 How should "${p}" be positioned in the market for the "${s}" segment?
 Suggest a clear positioning statement and differentiation angle. Markdown.`,
-    causalEdges: [{ from: 'buyerPersona', label: 'shapes' }],
+    causalEdges: [],
   },
 
   buyerPersona: {

@@ -90,6 +90,14 @@ export function buildInsightElements(segmentId: string): { nodes: Node[]; edges:
     })
   })
 
-  const layoutedNodes = getLayoutedInsightElements(nodes, edges)
-  return { nodes: layoutedNodes, edges }
+  // Deduplicate edges by id (guards against bidirectional edge definitions)
+  const seen = new Set<string>()
+  const uniqueEdges = edges.filter((e) => {
+    if (seen.has(e.id)) return false
+    seen.add(e.id)
+    return true
+  })
+
+  const layoutedNodes = getLayoutedInsightElements(nodes, uniqueEdges)
+  return { nodes: layoutedNodes, edges: uniqueEdges }
 }
