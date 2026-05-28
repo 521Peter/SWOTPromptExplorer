@@ -302,11 +302,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can explore the detailed analysis for that segment.
 
 **Acceptance Criteria:**
-- [ ] Clicking a `ready` segment node transitions the canvas from Layer 1 to Layer 2
+- [x] Clicking a `ready` segment node transitions the canvas from Layer 1 to Layer 2
 - [ ] Layer transition is animated (Framer Motion: fade out Layer 1, fade in Layer 2)
-- [ ] A breadcrumb or back button shows the active segment name
-- [ ] Clicking `idle` or `loading` nodes does nothing (or shows a tooltip: "Run analysis first")
-- [ ] Back button returns to Layer 1 with the segment graph intact
+- [x] A breadcrumb or back button shows the active segment name
+- [x] Clicking `idle` or `loading` nodes does nothing (or shows a tooltip: "Run analysis first")
+- [x] Back button returns to Layer 1 with the segment graph intact
 
 **Effort:** M (35 min)
 **Depends on:** US-14, US-15
@@ -319,12 +319,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** causal relationships flow visually from top to bottom.
 
 **Acceptance Criteria:**
-- [ ] `components/graphs/InsightDAG.tsx` renders 9 `InsightNode` nodes
-- [ ] `lib/graph-utils.ts` exports `getLayoutedElements(nodes, edges)` using `dagre`
-- [ ] dagre config: `rankdir: 'TB'`, `ranksep: 80`, `nodesep: 60`
-- [ ] Each node: 180px × 72px, shows icon + label + color from `PROMPT_CONFIG`
-- [ ] A central "anchor" node shows the segment name (optional, adds context)
-- [ ] `fitView` called after layout
+- [x] `components/graphs/InsightDAG.tsx` renders 9 `InsightNode` nodes
+- [x] `lib/graph-utils.ts` exports `getLayoutedElements(nodes, edges)` using `dagre`
+- [x] dagre config: `rankdir: 'TB'`, `ranksep: 80`, `nodesep: 60`
+- [x] Each node: 180px × 72px, shows icon + label + color from `PROMPT_CONFIG`
+- [x] `fitView` called after layout
 
 **Effort:** M (45 min)
 **Depends on:** US-16, US-07
@@ -337,21 +336,16 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I understand how one insight influences another.
 
 **Acceptance Criteria:**
-- [ ] Edges derived from `causalEdges` in `PROMPT_CONFIG`
-- [ ] Edge styles by relationship type:
+- [x] Edges derived from `causalEdges` in `PROMPT_CONFIG`
+- [x] Edge styles by relationship type:
   - `amplifies` → dashed red
   - `informs` → dashed blue
   - `shapes` → dashed purple
   - `enables` → dashed green
   - `activates` → dashed orange
-- [ ] Edge labels rendered as small text mid-edge
-- [ ] All 5 defined causal edges render correctly:
-  - threats → weaknesses (amplifies)
-  - opportunities → marketingOKRs (informs)
-  - buyerPersona → marketPositioning (shapes)
-  - strengths → investmentOpportunities (enables)
-  - channelsDistribution → marketingOKRs (activates)
-- [ ] Standard segment→insight connection edges: solid, 0.5px, muted color
+- [x] Edge labels rendered as small text mid-edge
+- [x] All 5 defined causal edges render correctly
+- [x] Standard segment→insight connection edges: solid, 0.5px, muted color
 
 **Effort:** S (30 min)
 **Depends on:** US-17
@@ -516,11 +510,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can identify insight types at a glance without reading labels.
 
 **Acceptance Criteria:**
-- [ ] `components/graphs/InsightNode.tsx` renders using the `color` and `icon` fields from `PROMPT_CONFIG`
-- [ ] Each node shows: Lucide icon (from US-D02 mapping) + label, color-coded per type
-- [ ] Node color is driven entirely by `PROMPT_CONFIG[key].color` — no separate hardcoded values in the component
-- [ ] Node selected state (panel open): highlighted border in the node's color
-- [ ] Hover state: subtle glow matching the node's color
+- [x] `components/graphs/InsightNode.tsx` renders using the `color` and `icon` fields from `PROMPT_CONFIG`
+- [x] Each node shows: Lucide icon (from US-D02 mapping) + label, color-coded per type
+- [x] Node color is driven entirely by `PROMPT_CONFIG[key].color` — no separate hardcoded values in the component
+- [x] Node selected state (panel open): highlighted border in the node's color
+- [x] Hover state: subtle glow matching the node's color
 
 **Effort:** S (25 min)
 **Depends on:** US-17, US-D01, US-D02
