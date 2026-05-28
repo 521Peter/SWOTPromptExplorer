@@ -42,14 +42,14 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I don't need to set up `.env` files or redeploy anything to try the app.
 
 **Acceptance Criteria:**
-- [ ] Gear icon (⚙) in top-right of sidebar opens a shadcn `Sheet` component
-- [ ] Inputs for: Anthropic (Claude), OpenAI, Groq, OpenRouter
-- [ ] Input type is `password` — keys are masked
-- [ ] "Save" persists keys to `localStorage` under key `swot_api_keys`
-- [ ] "Clear all" removes all keys from `localStorage` and resets form
-- [ ] On reload, saved keys pre-populate the form (masked)
-- [ ] Each field shows `✓ Connected` (green) when a key is present, `✗ Not set` (muted) when empty
-- [ ] Keys are never logged, stored server-side, or persisted beyond `localStorage`
+- [x] Gear icon (⚙) in top-right of sidebar opens a shadcn `Sheet` component
+- [x] Inputs for: Anthropic (Claude), OpenAI, Groq, OpenRouter
+- [x] Input type is `password` — keys are masked
+- [x] "Save" persists keys to `localStorage` under key `swot_api_keys`
+- [x] "Clear all" removes all keys from `localStorage` and resets form
+- [x] On reload, saved keys pre-populate the form (masked)
+- [x] Each field shows `✓ Connected` (green) when a key is present, `✗ Not set` (muted) when empty
+- [x] Keys are never logged, stored server-side, or persisted beyond `localStorage`
 
 **Effort:** S (30 min)
 **Depends on:** US-01
