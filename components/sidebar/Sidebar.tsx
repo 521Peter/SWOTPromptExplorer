@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Plus, X, Play, RotateCcw } from 'lucide-react'
 import { SettingsPanel } from './SettingsPanel'
-import { loadKeys } from '@/lib/settings/keys'
+import { loadKeys, loadProvider, saveProvider } from '@/lib/settings/keys'
+import type { Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
 
 interface Props {
@@ -11,12 +12,12 @@ interface Props {
     product: string
     objective: string
     segments: string[]
-    provider: 'openrouter'
+    provider: Provider
     keys: Partial<ApiKeys>
     openrouterModel: string
     force?: boolean
   }) => void
-  onProviderInit: (p: 'openrouter') => void
+  onProviderInit: (p: Provider) => void
   isRunning: boolean
 }
 
@@ -25,12 +26,15 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   const [objective, setObjective] = useState('')
   const [segments, setSegments] = useState<string[]>([])
   const [segmentInput, setSegmentInput] = useState('')
+  const [provider, setProvider] = useState<Provider>('openrouter')
   const [hasRun, setHasRun] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const lastRun = useRef<{ product: string; objective: string; segments: string[] } | null>(null)
 
   useEffect(() => {
-    onProviderInit('openrouter')
+    const saved = loadProvider()
+    setProvider(saved)
+    onProviderInit(saved)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -73,7 +77,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
     const force = hasRun
     setHasRun(true)
     setIsDirty(false)
-    onRun({ product, objective, segments, provider: 'openrouter', keys, openrouterModel: keys.openrouterModel ?? 'openai/gpt-4o-mini', force })
+    onRun({ product, objective, segments, provider, keys, openrouterModel: keys.openrouterModel ?? 'openai/gpt-4o-mini', force })
   }
 
   return (
@@ -110,7 +114,10 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
             swot<span style={{ color: '#555567', fontWeight: 400 }}>explorer</span>
           </span>
         </div>
-        <SettingsPanel />
+        <SettingsPanel
+          provider={provider}
+          onProviderChange={(p) => { setProvider(p); saveProvider(p) }}
+        />
       </div>
 
       {/* Form body */}
