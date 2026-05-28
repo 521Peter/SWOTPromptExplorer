@@ -168,13 +168,13 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** the client can trigger the full pipeline with a single HTTP call.
 
 **Acceptance Criteria:**
-- [ ] `app/api/insights/route.ts` exports `POST` handler
-- [ ] Accepts JSON body: `{ product, objective, segment, provider, keys, openrouterModel? }`
-- [ ] Invokes `buildInsightGraph(provider, keys)` then calls `graph.invoke(...)`
-- [ ] Returns `Response.json({ segment, provider, insights })` where `insights` contains all 9 keys
-- [ ] Returns HTTP 400 for missing required fields
-- [ ] Returns HTTP 500 with message on LLM errors (no stack traces exposed)
-- [ ] Keys from request body are used only for the current request — not stored, not logged
+- [x] `app/api/insights/route.ts` exports `POST` handler
+- [x] Accepts JSON body: `{ product, objective, segment, provider, keys, openrouterModel? }`
+- [x] Invokes `buildInsightGraph(provider, keys)` then calls `graph.invoke(...)`
+- [x] Returns `Response.json({ segment, provider, insights })` where `insights` contains all 9 keys
+- [x] Returns HTTP 400 for missing required fields
+- [x] Returns HTTP 500 with message on LLM errors (no stack traces exposed)
+- [x] Keys from request body are used only for the current request — not stored, not logged
 - [ ] `curl -X POST localhost:3000/api/insights -d '{"product":"...", ...}'` returns valid JSON
 
 **Effort:** S (20 min)
