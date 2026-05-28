@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, X, Play } from 'lucide-react'
 import { SettingsPanel } from './SettingsPanel'
 import { loadKeys, loadProvider, saveProvider } from '@/lib/settings/keys'
@@ -24,10 +24,13 @@ export function Sidebar({ onRun, isRunning }: Props) {
   const [objective, setObjective] = useState('')
   const [segments, setSegments] = useState<string[]>([])
   const [segmentInput, setSegmentInput] = useState('')
-  const [provider, setProvider] = useState<Provider>(loadProvider)
-  const [openrouterModel, setOpenrouterModel] = useState(
-    () => loadKeys().openrouterModel || 'openai/gpt-4o-mini'
-  )
+  const [provider, setProvider] = useState<Provider>('openrouter')
+  const [openrouterModel, setOpenrouterModel] = useState('openai/gpt-4o-mini')
+
+  useEffect(() => {
+    setProvider(loadProvider())
+    setOpenrouterModel(loadKeys().openrouterModel || 'openai/gpt-4o-mini')
+  }, [])
 
   const canRun =
     product.trim() &&

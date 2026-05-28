@@ -38,9 +38,11 @@ interface Props {
 
 export function SettingsPanel({ provider, openrouterModel, onProviderChange, onModelChange }: Props) {
   const [open, setOpen] = useState(false)
-  const [keys, setKeys] = useState<Partial<ApiKeys>>(loadKeys)
+  const [keys, setKeys] = useState<Partial<ApiKeys>>({})
   const [visible, setVisible] = useState<Record<string, boolean>>({})
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => { setKeys(loadKeys()) }, [])
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
