@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Plus, X, Play, RotateCcw } from 'lucide-react'
 import { SettingsPanel } from './SettingsPanel'
-import { loadKeys, loadProvider, saveProvider } from '@/lib/settings/keys'
-import type { Provider } from '@/lib/langgraph/providers'
+import { loadKeys } from '@/lib/settings/keys'
 import type { ApiKeys } from '@/lib/types'
 
 interface Props {
@@ -12,12 +11,12 @@ interface Props {
     product: string
     objective: string
     segments: string[]
-    provider: Provider
+    provider: 'openrouter'
     keys: Partial<ApiKeys>
     openrouterModel: string
     force?: boolean
   }) => void
-  onProviderInit: (p: Provider) => void
+  onProviderInit: (p: 'openrouter') => void
   isRunning: boolean
 }
 
@@ -26,19 +25,12 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   const [objective, setObjective] = useState('')
   const [segments, setSegments] = useState<string[]>([])
   const [segmentInput, setSegmentInput] = useState('')
-  const [provider, setProvider] = useState<Provider>('openrouter')
-  const [openrouterModel, setOpenrouterModel] = useState('openai/gpt-4o-mini')
   const [hasRun, setHasRun] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
-  // snapshot of last-run config to detect dirty state
   const lastRun = useRef<{ product: string; objective: string; segments: string[] } | null>(null)
 
   useEffect(() => {
-    const saved = loadProvider()
-    const model = loadKeys().openrouterModel || 'openai/gpt-4o-mini'
-    setProvider(saved)
-    setOpenrouterModel(model)
-    onProviderInit(saved)
+    onProviderInit('openrouter')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -76,12 +68,12 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
 
   function handleRun() {
     if (!canRun) return
-    const keys = { ...loadKeys(), openrouterModel }
+    const keys = loadKeys()
     lastRun.current = { product: product.trim(), objective: objective.trim(), segments: [...segments] }
     const force = hasRun
     setHasRun(true)
     setIsDirty(false)
-    onRun({ product, objective, segments, provider, keys, openrouterModel, force })
+    onRun({ product, objective, segments, provider: 'openrouter', keys, openrouterModel: keys.openrouterModel ?? 'openai/gpt-4o-mini', force })
   }
 
   return (
@@ -118,12 +110,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
             swot<span style={{ color: '#555567', fontWeight: 400 }}>explorer</span>
           </span>
         </div>
-        <SettingsPanel
-          provider={provider}
-          openrouterModel={openrouterModel}
-          onProviderChange={(p) => { setProvider(p); saveProvider(p) }}
-          onModelChange={setOpenrouterModel}
-        />
+        <SettingsPanel />
       </div>
 
       {/* Form body */}
