@@ -167,12 +167,6 @@
     height: 12px;
   }
 
-  /* ReactFlow MiniMap */
-  .react-flow__minimap {
-    border-radius: 8px;
-    overflow: hidden;
-    border: 0.5px solid #1E1E2E;
-  }
 
   /* Scrollbar styling for dark panels */
   ::-webkit-scrollbar {

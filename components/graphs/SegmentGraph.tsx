@@ -5,7 +5,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   BackgroundVariant,
   type Node,
   type Edge,
@@ -101,10 +100,6 @@ export function SegmentGraph({ segments, provider, getSession, tick, onSegmentCl
           size={1.2}
         />
         <Controls />
-        <MiniMap
-          nodeColor="#534AB7"
-          maskColor="rgba(10,10,15,0.7)"
-        />
       </ReactFlow>
 
       {/* Bottom hint */}
