@@ -34,12 +34,13 @@ export function useInsights() {
         provider: Provider
         keys: Partial<ApiKeys>
         openrouterModel: string
+        force?: boolean
       }
     ) => {
       const key = `${segment}:${config.provider}`
 
-      // Use cache if already ready
-      if (sessions.current[key]?.status === 'ready') return
+      // Use cache if already ready, unless forced
+      if (!config.force && sessions.current[key]?.status === 'ready') return
 
       sessions.current[key] = {
         status: 'loading',
@@ -98,6 +99,7 @@ export function useInsights() {
         provider: Provider
         keys: Partial<ApiKeys>
         openrouterModel: string
+        force?: boolean
       }
     ) => {
       Promise.all(segments.map((seg) => runSegment(seg, config)))

@@ -15,6 +15,7 @@ interface Props {
     provider: Provider
     keys: Partial<ApiKeys>
     openrouterModel: string
+    force?: boolean
   }) => void
   onProviderInit: (p: Provider) => void
   isRunning: boolean
@@ -77,9 +78,10 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
     if (!canRun) return
     const keys = { ...loadKeys(), openrouterModel }
     lastRun.current = { product: product.trim(), objective: objective.trim(), segments: [...segments] }
+    const force = hasRun
     setHasRun(true)
     setIsDirty(false)
-    onRun({ product, objective, segments, provider, keys, openrouterModel })
+    onRun({ product, objective, segments, provider, keys, openrouterModel, force })
   }
 
   return (

@@ -30,11 +30,12 @@ export default function Home() {
     provider: Provider
     keys: Partial<ApiKeys>
     openrouterModel: string
+    force?: boolean
   }) {
     setSegments(config.segments)
     setProvider(config.provider)
     setDismissedErrors(new Set())
-    runAll(config.segments, config)
+    runAll(config.segments, { ...config, force: config.force })
   }
 
   const isRunning = segments.some(
