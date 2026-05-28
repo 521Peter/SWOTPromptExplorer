@@ -96,11 +96,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** the graph has a single, well-typed state object flowing through all nodes.
 
 **Acceptance Criteria:**
-- [ ] `lib/langgraph/state.ts` exports `InsightState` using `Annotation.Root`
-- [ ] Input fields: `product`, `objective`, `segment`, `provider`
-- [ ] Output fields: `marketingOKRs`, `strengths`, `weaknesses`, `opportunities`, `threats`, `marketPositioning`, `buyerPersona`, `investmentOpportunities`, `channelsDistribution`
-- [ ] All fields typed as `Annotation<string>()`
-- [ ] File compiles without TypeScript errors
+- [x] `lib/langgraph/state.ts` exports `InsightState` using `Annotation.Root`
+- [x] Input fields: `product`, `objective`, `segment`, `provider`
+- [x] Output fields: `marketingOKRs`, `strengths`, `weaknesses`, `opportunities`, `threats`, `marketPositioning`, `buyerPersona`, `investmentOpportunities`, `channelsDistribution`
+- [x] All fields typed as `Annotation<string>()`
+- [x] File compiles without TypeScript errors
 
 **Effort:** XS (10 min)
 **Depends on:** US-01
