@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertCircle, X } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -53,6 +53,16 @@ export default function Home() {
         : null
     })
     .filter(Boolean) as { segment: string; message: string }[]
+
+  // Auto-dismiss each error after 5 s
+  useEffect(() => {
+    if (errors.length === 0) return
+    const timers = errors.map(({ segment }) =>
+      setTimeout(() => dismissError(segment), 5000)
+    )
+    return () => timers.forEach(clearTimeout)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errors.map((e) => e.segment).join(',')])
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#0A0A0F' }}>
