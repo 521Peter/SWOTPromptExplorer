@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, X, Play } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, X, Play, RotateCcw } from 'lucide-react'
 import { SettingsPanel } from './SettingsPanel'
 import { loadKeys, loadProvider, saveProvider } from '@/lib/settings/keys'
 import type { Provider } from '@/lib/langgraph/providers'
@@ -27,6 +27,10 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   const [segmentInput, setSegmentInput] = useState('')
   const [provider, setProvider] = useState<Provider>('openrouter')
   const [openrouterModel, setOpenrouterModel] = useState('openai/gpt-4o-mini')
+  const [hasRun, setHasRun] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
+  // snapshot of last-run config to detect dirty state
+  const lastRun = useRef<{ product: string; objective: string; segments: string[] } | null>(null)
 
   useEffect(() => {
     const saved = loadProvider()
@@ -36,6 +40,17 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
     onProviderInit(saved)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Mark dirty whenever form changes after a run
+  useEffect(() => {
+    if (!lastRun.current) return
+    const snap = lastRun.current
+    const dirty =
+      product.trim() !== snap.product ||
+      objective.trim() !== snap.objective ||
+      segments.join(',') !== snap.segments.join(',')
+    setIsDirty(dirty)
+  }, [product, objective, segments])
 
   const canRun =
     product.trim() &&
@@ -60,8 +75,10 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
 
   function handleRun() {
     if (!canRun) return
-    // Merge openrouterModel from React state into keys so it always overrides localStorage
     const keys = { ...loadKeys(), openrouterModel }
+    lastRun.current = { product: product.trim(), objective: objective.trim(), segments: [...segments] }
+    setHasRun(true)
+    setIsDirty(false)
     onRun({ product, objective, segments, provider, keys, openrouterModel })
   }
 
@@ -216,14 +233,26 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
           className="w-full flex items-center justify-center gap-2 rounded-lg font-medium text-white transition-all disabled:opacity-35 hover:brightness-110 active:scale-[0.98]"
           style={{
             height: 36,
-            background: 'linear-gradient(135deg, #534AB7, #6B62D1)',
-            border: '1px solid #7B6FE0',
+            background: isDirty
+              ? 'linear-gradient(135deg, #92400E, #B45309)'
+              : 'linear-gradient(135deg, #534AB7, #6B62D1)',
+            border: isDirty ? '1px solid #D97706' : '1px solid #7B6FE0',
             fontSize: 13,
             letterSpacing: '0.01em',
+            transition: 'background 0.2s, border-color 0.2s',
           }}
         >
-          <Play size={12} fill="white" stroke="white" strokeWidth={0} />
-          Run analysis
+          {hasRun && !isRunning ? (
+            <>
+              <RotateCcw size={12} />
+              {isDirty ? 'Re-run with changes' : 'Re-run analysis'}
+            </>
+          ) : (
+            <>
+              <Play size={12} fill="white" stroke="white" strokeWidth={0} />
+              Run analysis
+            </>
+          )}
         </button>
       </div>
     </aside>
