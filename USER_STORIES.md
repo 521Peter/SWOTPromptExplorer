@@ -62,10 +62,9 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I get a helpful error state instead of a failed API call.
 
 **Acceptance Criteria:**
-- [ ] "Run Analysis" button is disabled when no API key exists for the selected provider
-- [ ] Disabled state shows: `⚙ Add at least one API key in Settings to get started →`
-- [ ] Clicking the prompt text opens the Settings panel directly
-- [ ] Button becomes active as soon as a valid key is saved for the selected provider
+- [x] "Run Analysis" button is disabled when no API key exists for the selected provider
+- [x] Disabled state shows: `⚙ Add a key in Settings to get started`
+- [x] Button becomes active as soon as a valid key is saved for the selected provider
 
 **Effort:** XS (15 min)
 **Depends on:** US-02
@@ -226,12 +225,12 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** the app knows what to analyze.
 
 **Acceptance Criteria:**
-- [ ] Sidebar contains: `Product` text input, `Objective` text input, `Segments` list with add/remove capability, `Provider` selector (US-10), settings gear icon (US-02), and "Run Analysis" button
-- [ ] Segments can be added by pressing Enter or clicking "+"
-- [ ] Segments can be removed via an × on each entry
-- [ ] "Run Analysis" button is disabled until product, objective, and at least one segment are filled
-- [ ] Form state persists across provider switches (don't reset on provider change)
-- [ ] Max 6 segments (UI constraint, not technical)
+- [x] Sidebar contains: `Product` text input, `Objective` text input, `Segments` list with add/remove capability, `Provider` selector (US-10), settings gear icon (US-02), and "Run Analysis" button
+- [x] Segments can be added by pressing Enter or clicking "+"
+- [x] Segments can be removed via an × on each entry
+- [x] "Run Analysis" button is disabled until product, objective, and at least one segment are filled
+- [x] Form state persists across provider switches (don't reset on provider change)
+- [x] Max 6 segments (UI constraint, not technical)
 
 **Effort:** S (25 min)
 **Depends on:** US-01
