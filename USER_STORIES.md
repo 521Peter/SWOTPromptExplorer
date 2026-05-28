@@ -149,13 +149,13 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** a single `graph.invoke()` call fires all prompts concurrently.
 
 **Acceptance Criteria:**
-- [ ] `lib/langgraph/nodes.ts` exports `makeInsightNode(promptKey, llm)` — returns an async node function
-- [ ] Each node reads `state.product`, `state.objective`, `state.segment`, calls LLM, writes result to its key
-- [ ] System prompt: `"You are a senior market strategist. Be specific, not generic. Format responses in markdown."`
-- [ ] `lib/langgraph/graph.ts` exports `buildInsightGraph(provider, keys)`
-- [ ] Graph: `START` fans out to all 9 nodes, all 9 nodes fan in to `END`
-- [ ] `graph.compile()` succeeds without runtime errors
-- [ ] `graph.invoke({product, objective, segment, provider})` returns an object with all 9 insight keys populated
+- [x] `lib/langgraph/nodes.ts` exports `makeInsightNode(promptKey, llm)` — returns an async node function
+- [x] Each node reads `state.product`, `state.objective`, `state.segment`, calls LLM, writes result to its key
+- [x] System prompt: `"You are a senior market strategist. Be specific, not generic. Format responses in markdown."`
+- [x] `lib/langgraph/graph.ts` exports `buildInsightGraph(provider, keys)`
+- [x] Graph: `START` fans out to all 9 nodes, all 9 nodes fan in to `END`
+- [x] `graph.compile()` succeeds without runtime errors
+- [x] `graph.invoke({product, objective, segment, provider})` returns an object with all 9 insight keys populated
 
 **Effort:** M (40 min)
 **Depends on:** US-05, US-06, US-07
