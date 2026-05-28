@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AlertCircle, X } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Sidebar } from '@/components/sidebar/Sidebar'
 import { SegmentGraph } from '@/components/graphs/SegmentGraph'
 import { InsightDAG } from '@/components/graphs/InsightDAG'
@@ -36,10 +38,57 @@ export default function Home() {
   const activeSession =
     state.activeSegment ? getSession(state.activeSegment, state.provider) : null
 
+  // Collect unique errors across all segments
+  const errors = segments
+    .map((seg) => {
+      const s = getSession(seg, state.provider)
+      return s.status === 'error' && s.error ? { segment: seg, message: s.error } : null
+    })
+    .filter(Boolean) as { segment: string; message: string }[]
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#0A0A0F' }}>
       <Sidebar onRun={handleRun} onProviderInit={setProvider} isRunning={isRunning} />
       <main className="flex-1 flex overflow-hidden relative">
+        {/* Error alerts — floats above the graph */}
+        <AnimatePresence>
+          {errors.length > 0 && (
+            <motion.div
+              key="errors"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-4 left-1/2 z-20 flex flex-col gap-2"
+              style={{ transform: 'translateX(-50%)', width: 420, pointerEvents: 'auto' }}
+            >
+              {errors.map(({ segment, message }) => (
+                <Alert
+                  key={segment}
+                  variant="destructive"
+                  className="flex items-start gap-3 pr-4"
+                  style={{
+                    background: 'rgba(19,10,10,0.95)',
+                    border: '1px solid rgba(239,68,68,0.35)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#FCA5A5',
+                  }}
+                >
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#EF4444' }} />
+                  <div className="flex-1 min-w-0">
+                    <AlertTitle style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
+                      {segment} — Analysis failed
+                    </AlertTitle>
+                    <AlertDescription style={{ color: '#F87171', fontSize: 12, marginTop: 2 }}>
+                      {message}
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="wait">
           {state.activeLayer === 'insight' && state.activeSegment && activeSession ? (
             <motion.div

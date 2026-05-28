@@ -55,12 +55,21 @@ export async function POST(req: Request) {
     })
   } catch (err) {
     console.error('[/api/insights] LLM error:', err)
-    const e = err as Record<string, unknown>
-    const taskErrors = Array.isArray(e?.errors)
-      ? (e.errors as Error[]).map((x) => x?.message ?? String(x))
-      : null
-    const message = err instanceof Error ? err.message : 'LLM invocation failed'
-    const first = taskErrors?.[0] ?? message
-    return NextResponse.json({ error: first }, { status: 500 })
+    return NextResponse.json({ error: extractMessage(err) }, { status: 500 })
   }
+}
+
+function extractMessage(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err)
+  // Provider errors embed JSON: "401 {\"type\":\"error\",\"error\":{\"message\":\"...\"}}"
+  const jsonMatch = raw.match(/\{[\s\S]*\}/)
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0])
+      if (parsed?.error?.message) return parsed.error.message
+      if (parsed?.message) return parsed.message
+    } catch { /* not valid JSON, fall through */ }
+  }
+  // Strip LangChain troubleshooting URL suffix
+  return raw.split('\n')[0].replace(/\s*Troubleshooting URL:.*$/, '').trim()
 }
