@@ -113,13 +113,13 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** the rest of the pipeline is provider-agnostic.
 
 **Acceptance Criteria:**
-- [ ] `lib/langgraph/providers.ts` exports `getLLM` and `Provider` type
-- [ ] `'openai'` returns `ChatOpenAI` with model `gpt-4o-mini`, temp 0.7, maxTokens 400
-- [ ] `'claude'` returns `ChatAnthropic` with model `claude-haiku-4-5-20251001`, temp 0.7, maxTokens 400
-- [ ] `'groq'` returns `ChatGroq` with model `llama-3.3-70b-versatile`, temp 0.7, maxTokens 400
-- [ ] `'openrouter'` returns `ChatOpenAI` with `baseURL: 'https://openrouter.ai/api/v1'` and correct `defaultHeaders`
-- [ ] API keys are passed in via `keys` param, never hardcoded
-- [ ] Unrecognised provider throws a descriptive error
+- [x] `lib/langgraph/providers.ts` exports `getLLM` and `Provider` type
+- [x] `'openai'` returns `ChatOpenAI` with model `gpt-4o-mini`, temp 0.7, maxTokens 400
+- [x] `'claude'` returns `ChatAnthropic` with model `claude-haiku-4-5-20251001`, temp 0.7, maxTokens 400
+- [x] `'groq'` returns `ChatGroq` with model `llama-3.3-70b-versatile`, temp 0.7, maxTokens 400
+- [x] `'openrouter'` returns `ChatOpenAI` with `baseURL: 'https://openrouter.ai/api/v1'` and correct `defaultHeaders`
+- [x] API keys are passed in via `keys` param, never hardcoded
+- [x] Unrecognised provider throws a descriptive error
 
 **Effort:** S (20 min)
 **Depends on:** US-05
