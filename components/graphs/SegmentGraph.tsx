@@ -12,13 +12,17 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { SegmentNode, type SegmentNodeData } from './SegmentNode'
+import { ProductNode, type ProductNodeData } from './ProductNode'
 import { getRadialPosition } from '@/lib/graph-utils'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { SegmentSession } from '@/lib/types'
 
-const nodeTypes = { segmentNode: SegmentNode }
+const PRODUCT_ID = '__product__'
+const nodeTypes = { segmentNode: SegmentNode, productNode: ProductNode }
 
 interface Props {
+  product: string
+  objective: string
   segments: string[]
   provider: Provider
   getSession: (segment: string, provider: Provider) => SegmentSession
@@ -26,34 +30,42 @@ interface Props {
   onSegmentClick: (segment: string) => void
 }
 
-export function SegmentGraph({ segments, provider, getSession, tick, onSegmentClick }: Props) {
-  const nodes: Node[] = useMemo(
-    () =>
-      segments.map((seg, i) => {
-        const session = getSession(seg, provider)
-        return {
-          id: seg,
-          type: 'segmentNode',
-          position: getRadialPosition(i, segments.length),
-          data: {
-            label: seg,
-            status: session.status,
-            provider,
-            error: session.error,
-          } satisfies SegmentNodeData,
-        }
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [segments, provider, getSession, tick]
-  )
+export function SegmentGraph({ product, objective, segments, provider, getSession, tick, onSegmentClick }: Props) {
+  const nodes: Node[] = useMemo(() => {
+    const productNode: Node = {
+      id: PRODUCT_ID,
+      type: 'productNode',
+      position: { x: 300, y: 220 },
+      data: { label: product || 'Product', objective } satisfies ProductNodeData,
+    }
 
-  // Edges: connect adjacent segments to show relationships
+    const segmentNodes = segments.map((seg, i) => {
+      const session = getSession(seg, provider)
+      return {
+        id: seg,
+        type: 'segmentNode',
+        position: getRadialPosition(i, segments.length),
+        data: {
+          label: seg,
+          status: session.status,
+          provider,
+          error: session.error,
+        } satisfies SegmentNodeData,
+      }
+    })
+
+    return [productNode, ...segmentNodes]
+  },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [product, objective, segments, provider, getSession, tick])
+
+  // Hub-and-spoke: product node connects to each segment
   const edges: Edge[] = useMemo(
     () =>
-      segments.slice(0, -1).map((seg, i) => ({
+      segments.map((seg, i) => ({
         id: `edge-${i}`,
-        source: seg,
-        target: segments[i + 1],
+        source: PRODUCT_ID,
+        target: seg,
         style: { stroke: '#2E2E42', strokeWidth: 1, strokeDasharray: '4 5' },
         type: 'straight',
       })),
@@ -62,6 +74,7 @@ export function SegmentGraph({ segments, provider, getSession, tick, onSegmentCl
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
+      if (node.id === PRODUCT_ID) return
       const session = getSession(node.id, provider)
       if (session.status === 'ready') onSegmentClick(node.id)
     },

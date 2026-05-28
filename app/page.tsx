@@ -16,9 +16,12 @@ import type { ApiKeys, PromptType } from '@/lib/types'
 
 export default function Home() {
   const [segments, setSegments] = useState<string[]>([])
+  const [product, setProduct] = useState('')
+  const [objective, setObjective] = useState('')
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set())
   const { getSession, runAll, tick } = useInsights()
   const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
+
   function dismissError(segment: string) {
     setDismissedErrors((prev) => new Set(prev).add(segment))
   }
@@ -33,6 +36,8 @@ export default function Home() {
     force?: boolean
   }) {
     setSegments(config.segments)
+    setProduct(config.product)
+    setObjective(config.objective)
     setProvider(config.provider)
     setDismissedErrors(new Set())
     runAll(config.segments, { ...config, force: config.force })
@@ -195,6 +200,8 @@ export default function Home() {
                 transition={{ duration: 0.2 }}
               >
                 <SegmentGraph
+                  product={product}
+                  objective={objective}
                   segments={segments}
                   provider={state.provider}
                   getSession={getSession}
