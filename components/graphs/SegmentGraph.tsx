@@ -66,7 +66,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         id: `edge-${i}`,
         source: PRODUCT_ID,
         target: seg,
-        style: { stroke: '#2E2E42', strokeWidth: 1, strokeDasharray: '4 5' },
+        style: { stroke: '#5A5A7A', strokeWidth: 1.5, strokeDasharray: '5 4' },
         type: 'straight',
       })),
     [segments]

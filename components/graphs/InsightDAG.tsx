@@ -93,7 +93,7 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
         source: PRODUCT_ID,
         target: SEGMENT_ID,
         type: 'straight',
-        style: { stroke: '#534AB760', strokeDasharray: '4 4', strokeWidth: 1.5 },
+        style: { stroke: '#6B62D1', strokeDasharray: '5 4', strokeWidth: 1.5 },
       },
       // Segment connects to ALL insight nodes
       ...insightNodes.map((n) => ({
@@ -101,7 +101,7 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
         source: SEGMENT_ID,
         target: n.id,
         type: 'straight',
-        style: { stroke: '#3E3E55', strokeDasharray: '4 4', strokeWidth: 1 },
+        style: { stroke: '#5A5A7A', strokeDasharray: '5 4', strokeWidth: 1.5 },
       })),
     ]
 
