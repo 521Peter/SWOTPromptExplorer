@@ -79,7 +79,7 @@ export function SegmentGraph({ segments, provider, getSession, tick, onSegmentCl
   }
 
   return (
-    <div className="flex-1 relative" style={{ background: '#0A0A0F' }}>
+    <div className="h-full relative" style={{ background: '#0A0A0F' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}

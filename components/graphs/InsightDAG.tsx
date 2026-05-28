@@ -71,7 +71,7 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
   )
 
   return (
-    <div className="flex-1 relative" style={{ background: '#0A0A0F' }}>
+    <div className="h-full relative" style={{ background: '#0A0A0F' }}>
       {/* Back button */}
       <button
         onClick={onBack}
