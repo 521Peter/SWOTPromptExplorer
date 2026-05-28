@@ -57,7 +57,7 @@ export function SettingsPanel({ provider, openrouterModel, onProviderChange, onM
   }, [open])
 
   function handleSave() {
-    saveKeys(keys)
+    saveKeys({ ...keys, openrouterModel })
     saveProvider(provider)
     setSaved(true)
     setTimeout(() => setSaved(false), 1800)

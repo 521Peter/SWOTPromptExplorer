@@ -59,7 +59,6 @@ export function useInsights() {
             segment,
             provider: config.provider,
             keys: config.keys,
-            openrouterModel: config.openrouterModel,
           }),
         })
 

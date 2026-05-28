@@ -55,7 +55,9 @@ export function Sidebar({ onRun, isRunning }: Props) {
 
   function handleRun() {
     if (!canRun) return
-    onRun({ product, objective, segments, provider, keys: loadKeys(), openrouterModel })
+    // Merge openrouterModel from React state into keys so it always overrides localStorage
+    const keys = { ...loadKeys(), openrouterModel }
+    onRun({ product, objective, segments, provider, keys, openrouterModel })
   }
 
   return (
