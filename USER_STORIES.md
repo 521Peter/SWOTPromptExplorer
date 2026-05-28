@@ -132,11 +132,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** adding or changing a prompt type only requires editing one file.
 
 **Acceptance Criteria:**
-- [ ] `constants/prompt-config.ts` exports `PROMPT_CONFIG` as `Record<PromptType, PromptMeta>`
-- [ ] All 9 keys present: `marketingOKRs`, `strengths`, `weaknesses`, `opportunities`, `threats`, `marketPositioning`, `buyerPersona`, `investmentOpportunities`, `channelsDistribution`
-- [ ] Each entry has: `label`, `icon` (Lucide icon name), `color`, `prompt(product, objective, segment): string`, `causalEdges: { to?: string, from?: string, label: string }[]`
-- [ ] Causal edges defined: threats→weaknesses (amplifies), opportunities→marketingOKRs (informs), buyerPersona→marketPositioning (shapes), strengths→investmentOpportunities (enables), channels→marketingOKRs (activates)
-- [ ] Prompts instruct the LLM to use markdown formatting
+- [x] `constants/prompt-config.ts` exports `PROMPT_CONFIG` as `Record<PromptType, PromptMeta>`
+- [x] All 9 keys present: `marketingOKRs`, `strengths`, `weaknesses`, `opportunities`, `threats`, `marketPositioning`, `buyerPersona`, `investmentOpportunities`, `channelsDistribution`
+- [x] Each entry has: `label`, `icon` (Lucide icon name), `color`, `prompt(product, objective, segment): string`, `causalEdges: { to?: string, from?: string, label: string }[]`
+- [x] Causal edges defined: threats→weaknesses (amplifies), opportunities→marketingOKRs (informs), buyerPersona→marketPositioning (shapes), strengths→investmentOpportunities (enables), channels→marketingOKRs (activates)
+- [x] Prompts instruct the LLM to use markdown formatting
 
 **Effort:** S (25 min)
 **Depends on:** US-05
@@ -493,8 +493,8 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** insight nodes and UI controls have consistent iconography.
 
 **Acceptance Criteria:**
-- [ ] `lucide-react` installed (already in dependency list)
-- [ ] Insight-type icon mapping per `PROMPT_CONFIG` (from `constants/prompt-config.ts`):
+- [x] `lucide-react` installed (already in dependency list)
+- [x] Insight-type icon mapping per `PROMPT_CONFIG` (from `constants/prompt-config.ts`):
   - `marketingOKRs` → `Target`
   - `strengths` → `TrendingUp`
   - `weaknesses` → `AlertTriangle`
@@ -504,7 +504,7 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
   - `buyerPersona` → `User`
   - `investmentOpportunities` → `BarChart2`
   - `channelsDistribution` → `Share2`
-- [ ] Icon names stored in `PROMPT_CONFIG` (each entry has an `icon` field) so the mapping lives in one place
+- [x] Icon names stored in `PROMPT_CONFIG` (each entry has an `icon` field) so the mapping lives in one place
 
 **Effort:** XS (15 min)
 **Depends on:** US-07
