@@ -77,10 +77,10 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** a deployed instance can come pre-configured without manual key entry.
 
 **Acceptance Criteria:**
-- [ ] Supports `NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY`, `NEXT_PUBLIC_DEFAULT_OPENAI_KEY`, `NEXT_PUBLIC_DEFAULT_GROQ_KEY`, `NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY`
-- [ ] Env vars pre-populate the Settings form on first load (if `localStorage` is empty)
-- [ ] Users can override env var values with their own keys in the Settings panel
-- [ ] Env vars are `NEXT_PUBLIC_` — client-side only, no server-side secret storage
+- [x] Supports `NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY`, `NEXT_PUBLIC_DEFAULT_OPENAI_KEY`, `NEXT_PUBLIC_DEFAULT_GROQ_KEY`, `NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY`
+- [x] Env vars pre-populate the Settings form on first load (if `localStorage` is empty)
+- [x] Users can override env var values with their own keys in the Settings panel
+- [x] Env vars are `NEXT_PUBLIC_` — client-side only, no server-side secret storage
 
 **Effort:** XS (15 min)
 **Depends on:** US-02
