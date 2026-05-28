@@ -24,7 +24,7 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
       style={{
         width: 180,
         background: '#13131A',
-        border: `0.5px solid ${selected ? d.color : `${d.color}33`}`,
+        border: `1px solid ${selected ? d.color : `${d.color}70`}`,
         borderRadius: 10,
         padding: '10px 14px',
         display: 'flex',
