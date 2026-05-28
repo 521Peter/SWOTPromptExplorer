@@ -1,6 +1,8 @@
 import type { ApiKeys } from '@/lib/types'
+import type { Provider } from '@/lib/langgraph/providers'
 
 const STORAGE_KEY = 'swot_api_keys'
+const PROVIDER_KEY = 'swot_active_provider'
 
 // Optional env-var defaults (NEXT_PUBLIC_ so they reach the client).
 // Keys entered in the Settings panel always take precedence.
@@ -10,8 +12,18 @@ function envDefaults(): Partial<ApiKeys> {
     openai:         process.env.NEXT_PUBLIC_DEFAULT_OPENAI_KEY     ?? '',
     groq:           process.env.NEXT_PUBLIC_DEFAULT_GROQ_KEY       ?? '',
     openrouter:     process.env.NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY ?? '',
-    openrouterModel: 'mistralai/mistral-7b-instruct',
+    openrouterModel: 'openai/gpt-4o-mini',
   }
+}
+
+export function loadProvider(): Provider {
+  if (typeof window === 'undefined') return 'openrouter'
+  return (localStorage.getItem(PROVIDER_KEY) as Provider) || 'openrouter'
+}
+
+export function saveProvider(p: Provider): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(PROVIDER_KEY, p)
 }
 
 export function saveKeys(keys: Partial<ApiKeys>): void {
