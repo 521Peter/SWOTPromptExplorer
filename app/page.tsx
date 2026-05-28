@@ -15,8 +15,13 @@ import type { ApiKeys, PromptType } from '@/lib/types'
 
 export default function Home() {
   const [segments, setSegments] = useState<string[]>([])
+  const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set())
   const { getSession, runAll, tick } = useInsights()
   const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
+
+  function dismissError(segment: string) {
+    setDismissedErrors((prev) => new Set(prev).add(segment))
+  }
 
   function handleRun(config: {
     product: string
@@ -28,6 +33,7 @@ export default function Home() {
   }) {
     setSegments(config.segments)
     setProvider(config.provider)
+    setDismissedErrors(new Set())
     runAll(config.segments, config)
   }
 
@@ -38,11 +44,13 @@ export default function Home() {
   const activeSession =
     state.activeSegment ? getSession(state.activeSegment, state.provider) : null
 
-  // Collect unique errors across all segments
+  // Collect undismissed errors across all segments
   const errors = segments
     .map((seg) => {
       const s = getSession(seg, state.provider)
-      return s.status === 'error' && s.error ? { segment: seg, message: s.error } : null
+      return s.status === 'error' && s.error && !dismissedErrors.has(seg)
+        ? { segment: seg, message: s.error }
+        : null
     })
     .filter(Boolean) as { segment: string; message: string }[]
 
@@ -62,29 +70,48 @@ export default function Home() {
               className="absolute bottom-6 right-4 z-20 flex flex-col gap-2"
               style={{ width: 360, pointerEvents: 'auto' }}
             >
-              {errors.map(({ segment, message }) => (
-                <Alert
-                  key={segment}
-                  variant="destructive"
-                  className="flex items-start gap-3 pr-4"
-                  style={{
-                    background: 'rgba(19,10,10,0.95)',
-                    border: '1px solid rgba(239,68,68,0.35)',
-                    backdropFilter: 'blur(8px)',
-                    color: '#FCA5A5',
-                  }}
-                >
-                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#EF4444' }} />
-                  <div className="flex-1 min-w-0">
-                    <AlertTitle style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
-                      {segment} — Analysis failed
-                    </AlertTitle>
-                    <AlertDescription style={{ color: '#F87171', fontSize: 12, marginTop: 2 }}>
-                      {message}
-                    </AlertDescription>
-                  </div>
-                </Alert>
-              ))}
+              <AnimatePresence initial={false}>
+                {errors.map(({ segment, message }) => (
+                  <motion.div
+                    key={segment}
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 20, scale: 0.97 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <Alert
+                      variant="destructive"
+                      className="flex items-start gap-3"
+                      style={{
+                        background: 'rgba(19,10,10,0.95)',
+                        border: '1px solid rgba(239,68,68,0.35)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#FCA5A5',
+                        paddingRight: 36,
+                      }}
+                    >
+                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#EF4444' }} />
+                      <div className="flex-1 min-w-0">
+                        <AlertTitle style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
+                          {segment} — Analysis failed
+                        </AlertTitle>
+                        <AlertDescription style={{ color: '#F87171', fontSize: 12, marginTop: 2 }}>
+                          {message}
+                        </AlertDescription>
+                      </div>
+                      <button
+                        onClick={() => dismissError(segment)}
+                        className="absolute top-2.5 right-2.5 flex items-center justify-center rounded transition-colors"
+                        style={{ color: '#7A3A3A', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = '#FCA5A5')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = '#7A3A3A')}
+                      >
+                        <X size={13} />
+                      </button>
+                    </Alert>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
