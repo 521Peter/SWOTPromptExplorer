@@ -11,28 +11,28 @@ export function getLLM(provider: Provider, keys: Partial<ApiKeys>) {
       return new ChatOpenAI({
         model: 'gpt-4o-mini',
         temperature: 0.7,
-        maxTokens: 400,
+        maxTokens: 1200,
         apiKey: keys.openai,
       })
     case 'claude':
       return new ChatAnthropic({
         model: 'claude-haiku-4-5-20251001',
         temperature: 0.7,
-        maxTokens: 400,
+        maxTokens: 1200,
         anthropicApiKey: keys.anthropic,
       })
     case 'groq':
       return new ChatGroq({
         model: 'llama-3.3-70b-versatile',
         temperature: 0.7,
-        maxTokens: 400,
+        maxTokens: 1200,
         apiKey: keys.groq,
       })
     case 'openrouter':
       return new ChatOpenAI({
         model: keys.openrouterModel || 'openai/gpt-4o-mini',
         temperature: 0.7,
-        maxTokens: 400,
+        maxTokens: 1200,
         apiKey: keys.openrouter,
         configuration: {
           baseURL: 'https://openrouter.ai/api/v1',
