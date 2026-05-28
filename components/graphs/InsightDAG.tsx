@@ -40,7 +40,7 @@ interface Props {
 }
 
 export function InsightDAG({ product, objective, segment, provider, session, selectedNode, onNodeClick, onBack }: Props) {
-  const { nodes: baseInsightNodes, edges: insightEdges, rootIds } = useMemo(
+  const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
     () => buildInsightElements(segment),
     [segment]
   )
@@ -93,24 +93,26 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
         source: PRODUCT_ID,
         target: SEGMENT_ID,
         type: 'straight',
-        style: { stroke: '#534AB750', strokeDasharray: '4 4', strokeWidth: 1 },
+        style: { stroke: '#534AB760', strokeDasharray: '4 4', strokeWidth: 1.5 },
       },
-      ...rootIds.map((rootId) => ({
-        id: `__seg-${rootId}__`,
+      // Segment connects to ALL insight nodes
+      ...insightNodes.map((n) => ({
+        id: `__seg-${n.id}__`,
         source: SEGMENT_ID,
-        target: rootId,
+        target: n.id,
         type: 'straight',
-        style: { stroke: '#2E2E4280', strokeDasharray: '4 4', strokeWidth: 1 },
+        style: { stroke: '#3E3E55', strokeDasharray: '4 4', strokeWidth: 1 },
       })),
     ]
 
     // Re-layout everything together so dagre ranks the header nodes above insight nodes
     const allRaw: Node[] = [productNode, segmentNode, ...insightNodes]
+    // Use only topEdges for dagre layout (insight-to-insight edges handled separately for layout)
     const allEdgesRaw: Edge[] = [...topEdges, ...insightEdges]
     const laid = getLayoutedInsightElements(allRaw, allEdgesRaw)
 
     return { allNodes: laid, allEdges: allEdgesRaw }
-  }, [product, objective, segment, provider, session.status, insightNodes, rootIds, insightEdges])
+  }, [product, objective, segment, provider, session.status, insightNodes, insightEdges])
 
   const styledEdges: Edge[] = useMemo(
     () =>
