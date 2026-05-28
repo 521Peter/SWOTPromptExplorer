@@ -188,13 +188,13 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can choose which LLM generates my analysis without touching any config.
 
 **Acceptance Criteria:**
-- [ ] `components/sidebar/ProviderSelector.tsx` renders all 4 provider options as a segmented button group
-- [ ] Each option shows: icon (◆/⬡/▲), label, and badge (e.g., "Anthropic", "OpenAI", "Groq", "OpenRouter")
-- [ ] Active provider is highlighted with its brand color: Claude `#D97706`, OpenAI `#10B981`, Groq `#8B5CF6`, OpenRouter `#EC4899`
-- [ ] Providers without a saved API key show a lock icon and are non-clickable
-- [ ] Hovering a locked provider shows tooltip: `"Add key in Settings →"`
-- [ ] Selecting a provider updates global `provider` state immediately
-- [ ] When `openrouter` is selected, a model picker dropdown appears (see US-11)
+- [x] `components/sidebar/ProviderSelector.tsx` renders all 4 provider options as a segmented button group
+- [x] Each option shows: icon (◆/⬡/▲), label, and badge (e.g., "Anthropic", "OpenAI", "Groq", "OpenRouter")
+- [x] Active provider is highlighted with its brand color: Claude `#D97706`, OpenAI `#10B981`, Groq `#8B5CF6`, OpenRouter `#EC4899`
+- [x] Providers without a saved API key show a lock icon and are non-clickable
+- [x] Hovering a locked provider shows tooltip: `"Add key in Settings →"`
+- [x] Selecting a provider updates global `provider` state immediately
+- [x] When `openrouter` is selected, a model picker dropdown appears (see US-11)
 
 **Effort:** S (30 min)
 **Depends on:** US-02, US-06
@@ -207,11 +207,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can test Gemini, Mistral, DeepSeek, or other models without separate accounts.
 
 **Acceptance Criteria:**
-- [ ] Dropdown appears only when `openrouter` provider is selected
-- [ ] Pre-populated with 6 curated models: Mistral 7B, Llama 3.1 8B, Gemini Flash 1.5, Claude 3 Haiku, GPT-4o Mini, DeepSeek Chat
-- [ ] Selected model stored in `localStorage` alongside keys
-- [ ] Selected model sent as `openrouterModel` in POST body
-- [ ] Default selection: `mistralai/mistral-7b-instruct`
+- [x] Dropdown appears only when `openrouter` provider is selected
+- [x] Pre-populated with 6 curated models: Mistral 7B, Llama 3.1 8B, Gemini Flash 1.5, Claude 3 Haiku, GPT-4o Mini, DeepSeek Chat
+- [x] Selected model stored in `localStorage` alongside keys
+- [x] Selected model sent as `openrouterModel` in POST body
+- [x] Default selection: `mistralai/mistral-7b-instruct`
 
 **Effort:** XS (20 min)
 **Depends on:** US-10
