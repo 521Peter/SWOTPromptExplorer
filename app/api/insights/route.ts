@@ -40,7 +40,12 @@ export async function POST(req: Request) {
       insights: insights as Record<PromptType, string>,
     })
   } catch (err) {
+    const e = err as Record<string, unknown>
+    const taskErrors = Array.isArray(e?.errors)
+      ? (e.errors as Error[]).map((x) => x?.message ?? String(x))
+      : null
     const message = err instanceof Error ? err.message : 'LLM invocation failed'
-    return NextResponse.json({ error: message }, { status: 500 })
+    const first = taskErrors?.[0] ?? message
+    return NextResponse.json({ error: first }, { status: 500 })
   }
 }

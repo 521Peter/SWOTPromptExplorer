@@ -13,8 +13,8 @@ import type { ApiKeys, PromptType } from '@/lib/types'
 
 export default function Home() {
   const [segments, setSegments] = useState<string[]>([])
-  const { getSession, runAll } = useInsights()
-  const { state, selectSegment, selectNode, backToSegments } = useGraphState()
+  const { getSession, runAll, tick } = useInsights()
+  const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
 
   function handleRun(config: {
     product: string
@@ -25,6 +25,7 @@ export default function Home() {
     openrouterModel: string
   }) {
     setSegments(config.segments)
+    setProvider(config.provider)
     runAll(config.segments, config)
   }
 
@@ -79,6 +80,7 @@ export default function Home() {
                 segments={segments}
                 provider={state.provider}
                 getSession={getSession}
+                tick={tick}
                 onSegmentClick={selectSegment}
               />
             </motion.div>

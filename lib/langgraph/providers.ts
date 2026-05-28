@@ -12,7 +12,7 @@ export function getLLM(provider: Provider, keys: Partial<ApiKeys>) {
         model: 'gpt-4o-mini',
         temperature: 0.7,
         maxTokens: 400,
-        openAIApiKey: keys.openai,
+        apiKey: keys.openai,
       })
     case 'claude':
       return new ChatAnthropic({
@@ -30,10 +30,10 @@ export function getLLM(provider: Provider, keys: Partial<ApiKeys>) {
       })
     case 'openrouter':
       return new ChatOpenAI({
-        model: keys.openrouterModel || 'mistralai/mistral-7b-instruct',
+        model: keys.openrouterModel || 'openai/gpt-4o-mini',
         temperature: 0.7,
         maxTokens: 400,
-        openAIApiKey: keys.openrouter,
+        apiKey: keys.openrouter,
         configuration: {
           baseURL: 'https://openrouter.ai/api/v1',
           defaultHeaders: {

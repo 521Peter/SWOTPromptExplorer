@@ -10,7 +10,7 @@ interface GraphState {
   provider: Provider
 }
 
-export function useGraphState(initialProvider: Provider = 'claude') {
+export function useGraphState(initialProvider: Provider = 'openrouter') {
   const [state, setState] = useState<GraphState>({
     activeLayer: 'segment',
     activeSegment: null,

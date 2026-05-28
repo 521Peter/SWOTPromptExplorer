@@ -8,7 +8,7 @@ import type { ApiKeys, PromptType, SegmentSession } from '@/lib/types'
 // providers are stored independently, enabling comparison.
 export function useInsights() {
   const sessions = useRef<Record<string, SegmentSession>>({})
-  const [, forceUpdate] = useState(0)
+  const [tick, forceUpdate] = useState(0)
 
   const getSession = useCallback(
     (segment: string, provider: Provider): SegmentSession => {
@@ -106,5 +106,5 @@ export function useInsights() {
     [runSegment]
   )
 
-  return { getSession, runSegment, runAll }
+  return { getSession, runSegment, runAll, tick }
 }

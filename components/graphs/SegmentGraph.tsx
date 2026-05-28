@@ -23,10 +23,11 @@ interface Props {
   segments: string[]
   provider: Provider
   getSession: (segment: string, provider: Provider) => SegmentSession
+  tick: number
   onSegmentClick: (segment: string) => void
 }
 
-export function SegmentGraph({ segments, provider, getSession, onSegmentClick }: Props) {
+export function SegmentGraph({ segments, provider, getSession, tick, onSegmentClick }: Props) {
   const nodes: Node[] = useMemo(
     () =>
       segments.map((seg, i) => {
@@ -44,7 +45,7 @@ export function SegmentGraph({ segments, provider, getSession, onSegmentClick }:
         }
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [segments, provider, getSession]
+    [segments, provider, getSession, tick]
   )
 
   // Edges: connect adjacent segments to show relationships
