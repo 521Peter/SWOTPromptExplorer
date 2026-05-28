@@ -38,7 +38,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#0A0A0F' }}>
-      <Sidebar onRun={handleRun} isRunning={isRunning} />
+      <Sidebar onRun={handleRun} onProviderInit={setProvider} isRunning={isRunning} />
       <main className="flex-1 flex overflow-hidden relative">
         <AnimatePresence mode="wait">
           {state.activeLayer === 'insight' && state.activeSegment && activeSession ? (

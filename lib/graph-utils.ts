@@ -66,15 +66,13 @@ export function buildInsightElements(segmentId: string): { nodes: Node[]; edges:
   promptKeys.forEach((key) => {
     const cfg = PROMPT_CONFIG[key]
     cfg.causalEdges.forEach((ce) => {
-      const target = ce.to ?? key
       const source = ce.from ?? key
-      const edgeKey = ce.to ? key : (ce.from as PromptType)
-      const edgeTo = ce.to ?? key
+      const target = ce.to ?? key
 
       edges.push({
         id: `${segmentId}:${source}-${target}`,
-        source: `${segmentId}:${source === key ? key : ce.from!}`,
-        target: `${segmentId}:${edgeTo}`,
+        source: `${segmentId}:${source}`,
+        target: `${segmentId}:${target}`,
         label: ce.label,
         type: 'straight',
         animated: false,
@@ -86,7 +84,6 @@ export function buildInsightElements(segmentId: string): { nodes: Node[]; edges:
         labelStyle: { fill: '#7A7A8C', fontSize: 10 },
         labelBgStyle: { fill: '#13131A' },
       })
-      void edgeKey // suppress unused warning
     })
   })
 

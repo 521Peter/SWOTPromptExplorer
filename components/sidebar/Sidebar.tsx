@@ -16,10 +16,11 @@ interface Props {
     keys: Partial<ApiKeys>
     openrouterModel: string
   }) => void
+  onProviderInit: (p: Provider) => void
   isRunning: boolean
 }
 
-export function Sidebar({ onRun, isRunning }: Props) {
+export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   const [product, setProduct] = useState('')
   const [objective, setObjective] = useState('')
   const [segments, setSegments] = useState<string[]>([])
@@ -28,8 +29,12 @@ export function Sidebar({ onRun, isRunning }: Props) {
   const [openrouterModel, setOpenrouterModel] = useState('openai/gpt-4o-mini')
 
   useEffect(() => {
-    setProvider(loadProvider())
-    setOpenrouterModel(loadKeys().openrouterModel || 'openai/gpt-4o-mini')
+    const saved = loadProvider()
+    const model = loadKeys().openrouterModel || 'openai/gpt-4o-mini'
+    setProvider(saved)
+    setOpenrouterModel(model)
+    onProviderInit(saved)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const canRun =

@@ -15,7 +15,6 @@ import '@xyflow/react/dist/style.css'
 import { ArrowLeft } from 'lucide-react'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { buildInsightElements } from '@/lib/graph-utils'
-import { PROMPT_CONFIG } from '@/constants/prompt-config'
 import type { PromptType, SegmentSession } from '@/lib/types'
 
 const nodeTypes = { insightNode: InsightNode }
@@ -42,6 +41,7 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
         const content = session.insights?.[promptKey] ?? null
         const status = session.status === 'ready' ? 'ready'
           : session.status === 'loading' ? 'loading'
+          : session.status === 'error' ? 'error'
           : 'idle'
         return {
           ...n,
@@ -70,8 +70,6 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
     },
     [session.status, onNodeClick]
   )
-
-  void PROMPT_CONFIG // ensure import not tree-shaken
 
   return (
     <div className="flex-1 relative" style={{ background: '#0A0A0F' }}>

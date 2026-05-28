@@ -5,7 +5,7 @@ import { Settings, X, Check, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { saveKeys, loadKeys, clearKeys, saveProvider } from '@/lib/settings/keys'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
-import { OPENROUTER_MODELS } from '@/constants/openrouter-models'
+import { OPENROUTER_MODELS, DEFAULT_OPENROUTER_MODEL } from '@/constants/openrouter-models'
 
 const PROVIDERS: {
   id: Provider
@@ -66,6 +66,7 @@ export function SettingsPanel({ provider, openrouterModel, onProviderChange, onM
   function handleClear() {
     clearKeys()
     setKeys({})
+    onModelChange(DEFAULT_OPENROUTER_MODEL)
   }
 
   function toggleVisible(id: string) {

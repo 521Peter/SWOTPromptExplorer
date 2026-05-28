@@ -10,7 +10,7 @@ export interface InsightNodeData {
   label: string
   color: string
   icon: LucideIcon
-  status: 'idle' | 'loading' | 'ready'
+  status: 'idle' | 'loading' | 'ready' | 'error'
   content: string | null
   [key: string]: unknown
 }
