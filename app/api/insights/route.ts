@@ -27,6 +27,20 @@ export async function POST(req: Request) {
     )
   }
 
+  // Reject clearly empty keys rather than letting the LLM call fail opaquely
+  if (provider === 'openrouter' && !keys?.openrouter) {
+    return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+  if (provider === 'openai' && !keys?.openai) {
+    return NextResponse.json({ error: 'OpenAI API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+  if (provider === 'claude' && !keys?.anthropic) {
+    return NextResponse.json({ error: 'Anthropic API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+  if (provider === 'groq' && !keys?.groq) {
+    return NextResponse.json({ error: 'Groq API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+
   try {
     const graph = buildInsightGraph(provider, keys)
     const result = await graph.invoke({ product, objective, segment, provider })
@@ -40,6 +54,7 @@ export async function POST(req: Request) {
       insights: insights as Record<PromptType, string>,
     })
   } catch (err) {
+    console.error('[/api/insights] LLM error:', err)
     const e = err as Record<string, unknown>
     const taskErrors = Array.isArray(e?.errors)
       ? (e.errors as Error[]).map((x) => x?.message ?? String(x))

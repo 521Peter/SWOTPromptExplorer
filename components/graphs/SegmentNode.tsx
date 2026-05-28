@@ -125,6 +125,23 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         </span>
       </div>
 
+      {/* Error message inline */}
+      {d.status === 'error' && d.error && (
+        <div
+          style={{
+            fontSize: 10,
+            color: '#EF4444',
+            lineHeight: 1.4,
+            background: 'rgba(239,68,68,0.07)',
+            border: '0.5px solid rgba(239,68,68,0.2)',
+            borderRadius: 6,
+            padding: '4px 8px',
+          }}
+        >
+          {d.error}
+        </div>
+      )}
+
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
     </div>
