@@ -141,6 +141,54 @@
     background: #0A0A0F !important;
   }
 
+  /* ReactFlow Controls — dark theme */
+  .react-flow__controls {
+    background: #13131A !important;
+    border: 0.5px solid #1E1E2E !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .react-flow__controls-button {
+    background: #13131A !important;
+    border: none !important;
+    border-bottom: 0.5px solid #1E1E2E !important;
+    color: #5A5A6C !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.15s, color 0.15s !important;
+  }
+
+  .react-flow__controls-button:last-child {
+    border-bottom: none !important;
+  }
+
+  .react-flow__controls-button:hover {
+    background: #1B1B26 !important;
+    color: #C0C0CC !important;
+  }
+
+  .react-flow__controls-button svg {
+    fill: currentColor !important;
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  /* ReactFlow MiniMap */
+  .react-flow__minimap {
+    border-radius: 8px !important;
+    overflow: hidden;
+    border: 0.5px solid #1E1E2E !important;
+  }
+
   /* Scrollbar styling for dark panels */
   ::-webkit-scrollbar {
     width: 4px;

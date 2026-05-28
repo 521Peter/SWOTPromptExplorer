@@ -109,9 +109,8 @@ export function InsightDAG({ segment, session, selectedNode, onNodeClick, onBack
           gap={28}
           size={1.2}
         />
-        <Controls style={{ background: '#13131A', border: '0.5px solid #1E1E2E' }} />
+        <Controls />
         <MiniMap
-          style={{ background: '#13131A', border: '0.5px solid #1E1E2E' }}
           nodeColor="#534AB7"
           maskColor="rgba(10,10,15,0.7)"
         />
