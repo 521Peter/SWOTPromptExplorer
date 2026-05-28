@@ -7,8 +7,8 @@ import { tokens } from '@/lib/tokens'
 const NODE_W = 220
 const NODE_H = 72
 
-const PRODUCT_NODE_W = 200
-const PRODUCT_NODE_H = 80
+const PRODUCT_NODE_W = 240
+const PRODUCT_NODE_H = 88
 const H_GAP = 60  // horizontal gap between segment nodes
 const V_GAP = 180 // vertical gap from product to segments
 
@@ -35,8 +35,15 @@ export function getLayoutedInsightElements(
   g.setDefaultEdgeLabel(() => ({}))
 
   nodes.forEach((n) => {
-    const w = n.type === 'productNode' ? 200 : n.type === 'segmentNode' ? 220 : 180
-    const h = n.type === 'productNode' ? 80 : 72
+    // Use generous estimates so dagre spacing accommodates max-content nodes
+    const label = (n.data as Record<string, unknown>)?.label as string ?? ''
+    const objective = (n.data as Record<string, unknown>)?.objective as string ?? ''
+    const w = n.type === 'productNode'
+      ? Math.min(320, Math.max(160, label.length * 10 + objective.length * 6 + 40))
+      : n.type === 'segmentNode'
+      ? Math.min(280, Math.max(160, label.length * 8 + 80))
+      : 180
+    const h = n.type === 'productNode' ? 88 : 72
     g.setNode(n.id, { width: w, height: h })
   })
   edges.forEach((e) => g.setEdge(e.source, e.target))

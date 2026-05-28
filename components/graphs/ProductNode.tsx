@@ -15,7 +15,9 @@ function ProductNodeComponent({ data }: NodeProps) {
   return (
     <div
       style={{
-        width: 200,
+        minWidth: 160,
+        maxWidth: 320,
+        width: 'max-content',
         background: 'linear-gradient(135deg, #1A1A2E 0%, #16162A 100%)',
         border: '1.5px solid #534AB7',
         borderRadius: 16,
@@ -66,6 +68,7 @@ function ProductNodeComponent({ data }: NodeProps) {
             color: '#8B82E8',
             fontSize: 10,
             fontWeight: 500,
+            whiteSpace: 'nowrap',
             width: 'fit-content',
           }}
         >

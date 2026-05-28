@@ -40,7 +40,9 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
   return (
     <div
       style={{
-        width: 220,
+        minWidth: 160,
+        maxWidth: 280,
+        width: 'max-content',
         background: '#13131A',
         border: `${borderWidth}px solid ${borderColor}`,
         borderRadius: 12,
