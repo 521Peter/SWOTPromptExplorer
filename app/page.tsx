@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertCircle, X } from 'lucide-react'
+import { usePanelCallbackRef } from 'react-resizable-panels'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Sidebar } from '@/components/sidebar/Sidebar'
 import { SegmentGraph } from '@/components/graphs/SegmentGraph'
@@ -18,6 +20,16 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set())
   const { getSession, runAll, tick } = useInsights()
   const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
+  const [insightPanelHandle, setInsightPanelHandle] = usePanelCallbackRef()
+
+  // Collapse/expand insight panel imperatively when a node is selected
+  useEffect(() => {
+    if (state.selectedNode) {
+      insightPanelHandle?.expand()
+    } else {
+      insightPanelHandle?.collapse()
+    }
+  }, [state.selectedNode, insightPanelHandle])
 
   function dismissError(segment: string) {
     setDismissedErrors((prev) => new Set(prev).add(segment))
@@ -45,7 +57,6 @@ export default function Home() {
   const activeSession =
     state.activeSegment ? getSession(state.activeSegment, state.provider) : null
 
-  // Collect undismissed errors across all segments
   const errors = segments
     .map((seg) => {
       const s = getSession(seg, state.provider)
@@ -55,125 +66,162 @@ export default function Home() {
     })
     .filter(Boolean) as { segment: string; message: string }[]
 
-  // Auto-dismiss each error after 5 s
   useEffect(() => {
     if (errors.length === 0) return
     const timers = errors.map(({ segment }) =>
       setTimeout(() => dismissError(segment), 5000)
     )
     return () => timers.forEach(clearTimeout)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [errors.map((e) => e.segment).join(',')])
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#0A0A0F' }}>
-      <Sidebar onRun={handleRun} onProviderInit={setProvider} isRunning={isRunning} />
-      <main className="flex-1 flex overflow-hidden relative">
-        {/* Error alerts — floats above the graph */}
-        <AnimatePresence>
-          {errors.length > 0 && (
-            <motion.div
-              key="errors"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.2 }}
-              className="absolute bottom-6 right-4 z-20 flex flex-col gap-2"
-              style={{ width: 360, pointerEvents: 'auto' }}
-            >
-              <AnimatePresence initial={false}>
-                {errors.map(({ segment, message }) => (
-                  <motion.div
-                    key={segment}
-                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 20, scale: 0.97 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <Alert
-                      variant="destructive"
-                      className="flex items-start gap-3"
-                      style={{
-                        background: 'rgba(19,10,10,0.95)',
-                        border: '1px solid rgba(239,68,68,0.35)',
-                        backdropFilter: 'blur(8px)',
-                        color: '#FCA5A5',
-                        paddingRight: 36,
-                      }}
-                    >
-                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#EF4444' }} />
-                      <div className="flex-1 min-w-0">
-                        <AlertTitle style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
-                          {segment} — Analysis failed
-                        </AlertTitle>
-                        <AlertDescription style={{ color: '#F87171', fontSize: 12, marginTop: 2 }}>
-                          {message}
-                        </AlertDescription>
-                      </div>
-                      <button
-                        onClick={() => dismissError(segment)}
-                        className="absolute top-2.5 right-2.5 flex items-center justify-center rounded transition-colors"
-                        style={{ color: '#7A3A3A', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#FCA5A5')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#7A3A3A')}
-                      >
-                        <X size={13} />
-                      </button>
-                    </Alert>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <ResizablePanelGroup
+      direction="horizontal"
+      className="h-screen"
+      style={{ background: '#0A0A0F' }}
+    >
+      {/* Sidebar */}
+      <ResizablePanel defaultSize={16} minSize={12} maxSize={28} style={{ display: 'flex', flexDirection: 'column' }}>
+        <Sidebar onRun={handleRun} onProviderInit={setProvider} isRunning={isRunning} />
+      </ResizablePanel>
 
-        <AnimatePresence mode="wait">
-          {state.activeLayer === 'insight' && state.activeSegment && activeSession ? (
-            <motion.div
-              key="insight"
-              className="flex flex-1 overflow-hidden w-full h-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              <InsightDAG
-                segment={state.activeSegment}
-                session={activeSession}
-                selectedNode={state.selectedNode}
-                onNodeClick={(key: PromptType) => selectNode(key)}
-                onBack={backToSegments}
-              />
-              <InsightPanel
-                promptKey={state.selectedNode as PromptType | null}
-                content={
-                  state.selectedNode && activeSession.insights
-                    ? activeSession.insights[state.selectedNode as PromptType]
-                    : null
-                }
-                onClose={() => selectNode(null)}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="segment"
-              className="flex flex-1 overflow-hidden w-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              <SegmentGraph
-                segments={segments}
-                provider={state.provider}
-                getSession={getSession}
-                tick={tick}
-                onSegmentClick={selectSegment}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-    </div>
+      <ResizableHandle
+        withHandle
+        className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
+      />
+
+      {/* Main */}
+      <ResizablePanel defaultSize={84}>
+        <div className="h-full flex overflow-hidden relative" style={{ background: '#0A0A0F' }}>
+
+          {/* Error alerts */}
+          <AnimatePresence>
+            {errors.length > 0 && (
+              <motion.div
+                key="errors"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-6 right-4 z-20 flex flex-col gap-2"
+                style={{ width: 360, pointerEvents: 'auto' }}
+              >
+                <AnimatePresence initial={false}>
+                  {errors.map(({ segment, message }) => (
+                    <motion.div
+                      key={segment}
+                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.97 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <Alert
+                        variant="destructive"
+                        className="flex items-start gap-3"
+                        style={{
+                          background: 'rgba(19,10,10,0.95)',
+                          border: '1px solid rgba(239,68,68,0.35)',
+                          backdropFilter: 'blur(8px)',
+                          color: '#FCA5A5',
+                          paddingRight: 36,
+                        }}
+                      >
+                        <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#EF4444' }} />
+                        <div className="flex-1 min-w-0">
+                          <AlertTitle style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
+                            {segment} — Analysis failed
+                          </AlertTitle>
+                          <AlertDescription style={{ color: '#F87171', fontSize: 12, marginTop: 2 }}>
+                            {message}
+                          </AlertDescription>
+                        </div>
+                        <button
+                          onClick={() => dismissError(segment)}
+                          className="absolute top-2.5 right-2.5 flex items-center justify-center rounded transition-colors"
+                          style={{ color: '#7A3A3A', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = '#FCA5A5')}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = '#7A3A3A')}
+                        >
+                          <X size={13} />
+                        </button>
+                      </Alert>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Views */}
+          <AnimatePresence mode="wait">
+            {state.activeLayer === 'insight' && state.activeSegment && activeSession ? (
+              <motion.div
+                key="insight"
+                className="flex-1 h-full overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  <ResizablePanel defaultSize={72} minSize={40}>
+                    <InsightDAG
+                      segment={state.activeSegment}
+                      session={activeSession}
+                      selectedNode={state.selectedNode}
+                      onNodeClick={(key: PromptType) => selectNode(key)}
+                      onBack={backToSegments}
+                    />
+                  </ResizablePanel>
+
+                  <ResizableHandle
+                    withHandle
+                    className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
+                  />
+
+                  <ResizablePanel
+                    panelRef={setInsightPanelHandle}
+                    defaultSize={28}
+                    minSize={20}
+                    maxSize={55}
+                    collapsible
+                    collapsedSize={0}
+                  >
+                    <InsightPanel
+                      promptKey={state.selectedNode as PromptType | null}
+                      content={
+                        state.selectedNode && activeSession.insights
+                          ? activeSession.insights[state.selectedNode as PromptType]
+                          : null
+                      }
+                      onClose={() => selectNode(null)}
+                    />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="segment"
+                className="flex-1 h-full overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <SegmentGraph
+                  segments={segments}
+                  provider={state.provider}
+                  getSession={getSession}
+                  tick={tick}
+                  onSegmentClick={selectSegment}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   )
 }
