@@ -1,82 +1,99 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, X } from 'lucide-react'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Sidebar } from '@/components/sidebar/Sidebar'
-import { SegmentGraph } from '@/components/graphs/SegmentGraph'
-import { InsightDAG } from '@/components/graphs/InsightDAG'
-import { InsightPanel } from '@/components/panels/InsightPanel'
-import { useInsights } from '@/hooks/useInsights'
-import { useGraphState } from '@/hooks/useGraphState'
-import type { Provider } from '@/lib/langgraph/providers'
-import type { ApiKeys, PromptType } from '@/lib/types'
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, X } from "lucide-react";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Sidebar } from "@/components/sidebar/Sidebar";
+import { SegmentGraph } from "@/components/graphs/SegmentGraph";
+import { InsightDAG } from "@/components/graphs/InsightDAG";
+import { InsightPanel } from "@/components/panels/InsightPanel";
+import { useInsights } from "@/hooks/useInsights";
+import { useGraphState } from "@/hooks/useGraphState";
+import type { Provider } from "@/lib/langgraph/providers";
+import type { ApiKeys, PromptType } from "@/lib/types";
 
 export default function Home() {
-  const [segments, setSegments] = useState<string[]>([])
-  const [product, setProduct] = useState('')
-  const [objective, setObjective] = useState('')
-  const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set())
-  const { getSession, runAll, tick } = useInsights()
-  const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
+  const [segments, setSegments] = useState<string[]>([]);
+  const [product, setProduct] = useState("");
+  const [objective, setObjective] = useState("");
+  const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(
+    new Set(),
+  );
+  const { getSession, runAll, tick } = useInsights();
+  const { state, selectSegment, selectNode, backToSegments, setProvider } =
+    useGraphState();
 
   function dismissError(segment: string) {
-    setDismissedErrors((prev) => new Set(prev).add(segment))
+    setDismissedErrors((prev) => new Set(prev).add(segment));
   }
 
   function handleRun(config: {
-    product: string
-    objective: string
-    segments: string[]
-    provider: Provider
-    keys: Partial<ApiKeys>
-    openrouterModel: string
-    force?: boolean
+    product: string;
+    objective: string;
+    segments: string[];
+    provider: Provider;
+    keys: Partial<ApiKeys>;
+    openrouterModel: string;
+    force?: boolean;
   }) {
-    setSegments(config.segments)
-    setProduct(config.product)
-    setObjective(config.objective)
-    setProvider(config.provider)
-    setDismissedErrors(new Set())
-    runAll(config.segments, { ...config, force: config.force })
+    setSegments(config.segments);
+    setProduct(config.product);
+    setObjective(config.objective);
+    setProvider(config.provider);
+    setDismissedErrors(new Set());
+    runAll(config.segments, { ...config, force: config.force });
   }
 
   const isRunning = segments.some(
-    (seg) => getSession(seg, state.provider).status === 'loading'
-  )
+    (seg) => getSession(seg, state.provider).status === "loading",
+  );
 
-  const activeSession =
-    state.activeSegment ? getSession(state.activeSegment, state.provider) : null
+  const activeSession = state.activeSegment
+    ? getSession(state.activeSegment, state.provider)
+    : null;
 
   const errors = segments
     .map((seg) => {
-      const s = getSession(seg, state.provider)
-      return s.status === 'error' && s.error && !dismissedErrors.has(seg)
+      const s = getSession(seg, state.provider);
+      return s.status === "error" && s.error && !dismissedErrors.has(seg)
         ? { segment: seg, message: s.error }
-        : null
+        : null;
     })
-    .filter(Boolean) as { segment: string; message: string }[]
+    .filter(Boolean) as { segment: string; message: string }[];
 
   useEffect(() => {
-    if (errors.length === 0) return
+    if (errors.length === 0) return;
     const timers = errors.map(({ segment }) =>
-      setTimeout(() => dismissError(segment), 5000)
-    )
-    return () => timers.forEach(clearTimeout)
+      setTimeout(() => dismissError(segment), 5000),
+    );
+    return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [errors.map((e) => e.segment).join(',')])
+  }, [errors.map((e) => e.segment).join(",")]);
 
   return (
     <ResizablePanelGroup
       direction="horizontal"
       className="h-full"
-      style={{ background: '#0A0A0F' }}
+      style={{ background: "#0A0A0F" }}
     >
       {/* Sidebar */}
-      <ResizablePanel defaultSize={16} minSize={12} maxSize={28} style={{ display: 'flex', flexDirection: 'column' }}>
-        <Sidebar onRun={handleRun} onProviderInit={setProvider} isRunning={isRunning} />
+      <ResizablePanel
+        defaultSize={22}
+        minSize={18}
+        maxSize={32}
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <Sidebar
+          onRun={handleRun}
+          onProviderInit={setProvider}
+          isRunning={isRunning}
+        />
       </ResizablePanel>
 
       <ResizableHandle
@@ -86,8 +103,10 @@ export default function Home() {
 
       {/* Main */}
       <ResizablePanel defaultSize={84}>
-        <div className="h-full flex overflow-hidden relative" style={{ background: '#0A0A0F' }}>
-
+        <div
+          className="h-full flex overflow-hidden relative"
+          style={{ background: "#0A0A0F" }}
+        >
           {/* Error alerts */}
           <AnimatePresence>
             {errors.length > 0 && (
@@ -98,7 +117,7 @@ export default function Home() {
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.2 }}
                 className="absolute bottom-6 right-4 z-20 flex flex-col gap-2"
-                style={{ width: 360, pointerEvents: 'auto' }}
+                style={{ width: 360, pointerEvents: "auto" }}
               >
                 <AnimatePresence initial={false}>
                   {errors.map(({ segment, message }) => (
@@ -113,28 +132,53 @@ export default function Home() {
                         variant="destructive"
                         className="flex items-start gap-3"
                         style={{
-                          background: 'rgba(19,10,10,0.95)',
-                          border: '1px solid rgba(239,68,68,0.35)',
-                          backdropFilter: 'blur(8px)',
-                          color: '#FCA5A5',
+                          background: "rgba(19,10,10,0.95)",
+                          border: "1px solid rgba(239,68,68,0.35)",
+                          backdropFilter: "blur(8px)",
+                          color: "#FCA5A5",
                           paddingRight: 36,
                         }}
                       >
-                        <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#EF4444' }} />
+                        <AlertCircle
+                          className="h-4 w-4 mt-0.5 flex-shrink-0"
+                          style={{ color: "#EF4444" }}
+                        />
                         <div className="flex-1 min-w-0">
-                          <AlertTitle style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 600 }}>
+                          <AlertTitle
+                            style={{
+                              color: "#FCA5A5",
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
                             {segment} — Analysis failed
                           </AlertTitle>
-                          <AlertDescription style={{ color: '#F87171', fontSize: 12, marginTop: 2 }}>
+                          <AlertDescription
+                            style={{
+                              color: "#F87171",
+                              fontSize: 12,
+                              marginTop: 2,
+                            }}
+                          >
                             {message}
                           </AlertDescription>
                         </div>
                         <button
                           onClick={() => dismissError(segment)}
                           className="absolute top-2.5 right-2.5 flex items-center justify-center rounded transition-colors"
-                          style={{ color: '#7A3A3A', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = '#FCA5A5')}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = '#7A3A3A')}
+                          style={{
+                            color: "#7A3A3A",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 2,
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = "#FCA5A5")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = "#7A3A3A")
+                          }
                         >
                           <X size={13} />
                         </button>
@@ -148,7 +192,9 @@ export default function Home() {
 
           {/* Views */}
           <AnimatePresence mode="wait">
-            {state.activeLayer === 'insight' && state.activeSegment && activeSession ? (
+            {state.activeLayer === "insight" &&
+            state.activeSegment &&
+            activeSession ? (
               <motion.div
                 key="insight"
                 className="flex-1 h-full overflow-hidden"
@@ -173,16 +219,14 @@ export default function Home() {
                     className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
                   />
 
-                  <ResizablePanel
-                    defaultSize={28}
-                    minSize={15}
-                    maxSize={55}
-                  >
+                  <ResizablePanel defaultSize={28} minSize={15} maxSize={55}>
                     <InsightPanel
                       promptKey={state.selectedNode as PromptType | null}
                       content={
                         state.selectedNode && activeSession.insights
-                          ? activeSession.insights[state.selectedNode as PromptType]
+                          ? activeSession.insights[
+                              state.selectedNode as PromptType
+                            ]
                           : null
                       }
                       onClose={() => selectNode(null)}
@@ -211,9 +255,8 @@ export default function Home() {
               </motion.div>
             )}
           </AnimatePresence>
-
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>
-  )
+  );
 }

@@ -7,15 +7,21 @@ import { tokens } from '@/lib/tokens'
 const NODE_W = 220
 const NODE_H = 72
 
-/** Positions segment nodes in a loose radial layout */
+const PRODUCT_NODE_W = 200
+const PRODUCT_NODE_H = 80
+const H_GAP = 60  // horizontal gap between segment nodes
+const V_GAP = 180 // vertical gap from product to segments
+
+/** Product node sits at the top-center of the graph */
+export const PRODUCT_NODE_POSITION = { x: 0, y: 0 }
+
+/** Positions segment nodes in a horizontal row below the product node */
 export function getRadialPosition(index: number, total: number): { x: number; y: number } {
-  if (total === 1) return { x: 300, y: 250 }
-  const angle = (2 * Math.PI * index) / total - Math.PI / 2
-  const rx = Math.min(280, 120 + total * 40)
-  const ry = Math.min(220, 100 + total * 30)
+  const totalWidth = total * NODE_W + (total - 1) * H_GAP
+  const startX = (PRODUCT_NODE_W - totalWidth) / 2
   return {
-    x: 350 + rx * Math.cos(angle) - NODE_W / 2,
-    y: 280 + ry * Math.sin(angle) - NODE_H / 2,
+    x: startX + index * (NODE_W + H_GAP),
+    y: PRODUCT_NODE_H + V_GAP,
   }
 }
 

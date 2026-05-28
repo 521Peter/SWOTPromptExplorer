@@ -13,7 +13,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { SegmentNode, type SegmentNodeData } from './SegmentNode'
 import { ProductNode, type ProductNodeData } from './ProductNode'
-import { getRadialPosition } from '@/lib/graph-utils'
+import { getRadialPosition, PRODUCT_NODE_POSITION } from '@/lib/graph-utils'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { SegmentSession } from '@/lib/types'
 
@@ -35,7 +35,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
     const productNode: Node = {
       id: PRODUCT_ID,
       type: 'productNode',
-      position: { x: 300, y: 220 },
+      position: PRODUCT_NODE_POSITION,
       data: { label: product || 'Product', objective } satisfies ProductNodeData,
     }
 
