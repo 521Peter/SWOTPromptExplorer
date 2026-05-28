@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertCircle, X } from 'lucide-react'
-import { usePanelCallbackRef } from 'react-resizable-panels'
+import type { ImperativePanelHandle } from 'react-resizable-panels'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -20,16 +20,16 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set())
   const { getSession, runAll, tick } = useInsights()
   const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
-  const [insightPanelHandle, setInsightPanelHandle] = usePanelCallbackRef()
+  const insightPanelRef = useRef<ImperativePanelHandle>(null)
 
   // Collapse/expand insight panel imperatively when a node is selected
   useEffect(() => {
     if (state.selectedNode) {
-      insightPanelHandle?.expand()
+      insightPanelRef.current?.expand()
     } else {
-      insightPanelHandle?.collapse()
+      insightPanelRef.current?.collapse()
     }
-  }, [state.selectedNode, insightPanelHandle])
+  }, [state.selectedNode])
 
   function dismissError(segment: string) {
     setDismissedErrors((prev) => new Set(prev).add(segment))
@@ -78,7 +78,7 @@ export default function Home() {
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      className="h-screen"
+      className="h-full"
       style={{ background: '#0A0A0F' }}
     >
       {/* Sidebar */}
@@ -181,7 +181,7 @@ export default function Home() {
                   />
 
                   <ResizablePanel
-                    panelRef={setInsightPanelHandle}
+                    ref={insightPanelRef}
                     defaultSize={28}
                     minSize={20}
                     maxSize={55}

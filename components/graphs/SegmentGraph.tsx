@@ -70,7 +70,7 @@ export function SegmentGraph({ segments, provider, getSession, tick, onSegmentCl
 
   if (segments.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: '#0A0A0F' }}>
+      <div className="h-full flex items-center justify-center" style={{ background: '#0A0A0F' }}>
         <p style={{ color: '#5A5A6C', fontSize: 13 }}>
           Add segments in the sidebar and run analysis to get started.
         </p>
