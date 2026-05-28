@@ -451,9 +451,9 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **Acceptance Criteria:**
 - [ ] App deploys to Vercel with `vercel --prod`
 - [ ] Vercel environment variables set: `NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY`, `NEXT_PUBLIC_DEFAULT_OPENAI_KEY`, `NEXT_PUBLIC_DEFAULT_GROQ_KEY`, `NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY` (optional — reviewer can use their own)
-- [ ] Build passes without TypeScript errors or lint warnings
+- [x] Build passes without TypeScript errors or lint warnings
 - [ ] Live URL added to `ARCHITECTURE.md` Section 1
-- [ ] No secrets committed to git
+- [x] No secrets committed to git
 
 **Effort:** XS (15 min)
 **Depends on:** All previous stories
