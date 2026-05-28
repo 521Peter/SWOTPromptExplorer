@@ -130,7 +130,7 @@ export default function Home() {
           {state.activeLayer === 'insight' && state.activeSegment && activeSession ? (
             <motion.div
               key="insight"
-              className="flex flex-1 overflow-hidden w-full"
+              className="flex flex-1 overflow-hidden w-full h-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

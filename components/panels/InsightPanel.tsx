@@ -42,7 +42,7 @@ export function InsightPanel({ promptKey, content, onClose }: Props) {
           transition={{ type: 'tween', duration: 0.28, ease: 'easeOut' }}
           style={{
             width: 380,
-            height: '100%',
+            alignSelf: 'stretch',
             flexShrink: 0,
             background: '#13131A',
             borderLeft: '0.5px solid #1E1E2E',
