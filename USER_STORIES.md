@@ -360,13 +360,13 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can read the detailed analysis without leaving the graph view.
 
 **Acceptance Criteria:**
-- [ ] `components/panels/InsightPanel.tsx` slides in from the right on node click (Framer Motion)
-- [ ] Panel shows: insight type label, icon, color accent, and the full LLM response body
-- [ ] LLM response is rendered as markdown using `react-markdown`
-- [ ] Panel can be closed via × button or pressing Escape
-- [ ] Closing the panel deselects the node
-- [ ] Clicking a different node while panel is open swaps content (no close/reopen flash)
-- [ ] Panel width: ~380px on desktop, does not overlap the graph controls
+- [x] `components/panels/InsightPanel.tsx` slides in from the right on node click (Framer Motion)
+- [x] Panel shows: insight type label, icon, color accent, and the full LLM response body
+- [x] LLM response is rendered as markdown using `react-markdown`
+- [x] Panel can be closed via × button or pressing Escape
+- [x] Closing the panel deselects the node
+- [x] Clicking a different node while panel is open swaps content (no close/reopen flash)
+- [x] Panel width: ~380px on desktop, does not overlap the graph controls
 
 **Effort:** M (40 min)
 **Depends on:** US-17
@@ -379,10 +379,10 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** I can track which results came from which LLM when comparing.
 
 **Acceptance Criteria:**
-- [ ] `ready` segment nodes display a small badge: provider label + brand color
-- [ ] Badge shows: "Claude" (amber), "GPT-4o mini" (green), "Llama 3.3" (purple), "OpenRouter" (pink)
-- [ ] If a segment has been run with multiple providers (cache has multiple entries), the badge shows the currently selected provider's result
-- [ ] Badge is visible at default zoom level without requiring hover
+- [x] `ready` segment nodes display a small badge: provider label + brand color
+- [x] Badge shows: "Claude" (amber), "GPT-4o mini" (green), "Llama 3.3" (purple), "OpenRouter" (pink)
+- [x] If a segment has been run with multiple providers (cache has multiple entries), the badge shows the currently selected provider's result
+- [x] Badge is visible at default zoom level without requiring hover
 
 **Effort:** XS (15 min)
 **Depends on:** US-14
@@ -414,12 +414,12 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** the app feels polished and intentional rather than abrupt.
 
 **Acceptance Criteria:**
-- [ ] Layer 1 → Layer 2 transition: Layer 1 fades out (300ms), Layer 2 fades in (300ms)
-- [ ] Layer 2 → Layer 1 (back): same fade in reverse
-- [ ] Insight panel: slides in from right (300ms ease-out)
-- [ ] Insight panel close: slides out to right (200ms ease-in)
+- [x] Layer 1 → Layer 2 transition: Layer 1 fades out (300ms), Layer 2 fades in (300ms)
+- [x] Layer 2 → Layer 1 (back): same fade in reverse
+- [x] Insight panel: slides in from right (300ms ease-out)
+- [x] Insight panel close: slides out to right (200ms ease-in)
 - [ ] Segment nodes animate from 0 → 1 opacity on initial render (staggered, 50ms apart)
-- [ ] No layout shift during any transition
+- [x] No layout shift during any transition
 
 **Effort:** S (25 min)
 **Depends on:** US-16, US-19
@@ -432,11 +432,11 @@ Epic 1: Setup & Config  →  Epic 2: LangGraph Pipeline  →  Epic 3: Segment Gr
 **so that** it looks like a professional internal tool, not a demo.
 
 **Acceptance Criteria:**
-- [ ] Background: `#0A0A0F`, Surface: `#13131A`, Border: `#1E1E2E`
-- [ ] Provider badge colors applied consistently: Claude=#D97706, OpenAI=#10B981, Groq=#8B5CF6, OpenRouter=#EC4899
-- [ ] All text readable at WCAG AA contrast on dark backgrounds
-- [ ] ReactFlow canvas background matches app background (no white box)
-- [ ] Tailwind dark mode class applied at root level
+- [x] Background: `#0A0A0F`, Surface: `#13131A`, Border: `#1E1E2E`
+- [x] Provider badge colors applied consistently: Claude=#D97706, OpenAI=#10B981, Groq=#8B5CF6, OpenRouter=#EC4899
+- [x] All text readable at WCAG AA contrast on dark backgrounds
+- [x] ReactFlow canvas background matches app background (no white box)
+- [x] Tailwind dark mode class applied at root level
 
 **Effort:** S (20 min)
 **Depends on:** US-13

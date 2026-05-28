@@ -123,8 +123,32 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: #0A0A0F;
+    color: #E6E6EC;
   }
   html {
     @apply font-sans;
+  }
+
+  /* ReactFlow canvas override — prevent white flash */
+  .react-flow__renderer,
+  .react-flow__container {
+    background: #0A0A0F !important;
+  }
+
+  /* Scrollbar styling for dark panels */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #13131A;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E1E2E;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2A2A3D;
   }
 }
