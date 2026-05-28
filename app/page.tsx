@@ -55,12 +55,12 @@ export default function Home() {
           {errors.length > 0 && (
             <motion.div
               key="errors"
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-4 left-1/2 z-20 flex flex-col gap-2"
-              style={{ transform: 'translateX(-50%)', width: 420, pointerEvents: 'auto' }}
+              className="absolute bottom-6 right-4 z-20 flex flex-col gap-2"
+              style={{ width: 360, pointerEvents: 'auto' }}
             >
               {errors.map(({ segment, message }) => (
                 <Alert
