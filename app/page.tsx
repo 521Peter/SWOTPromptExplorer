@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertCircle, X } from 'lucide-react'
-import type { ImperativePanelHandle } from 'react-resizable-panels'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -20,17 +19,6 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set())
   const { getSession, runAll, tick } = useInsights()
   const { state, selectSegment, selectNode, backToSegments, setProvider } = useGraphState()
-  const insightPanelRef = useRef<ImperativePanelHandle>(null)
-
-  // Collapse/expand insight panel imperatively when a node is selected
-  useEffect(() => {
-    if (state.selectedNode) {
-      insightPanelRef.current?.expand()
-    } else {
-      insightPanelRef.current?.collapse()
-    }
-  }, [state.selectedNode])
-
   function dismissError(segment: string) {
     setDismissedErrors((prev) => new Set(prev).add(segment))
   }
@@ -181,12 +169,9 @@ export default function Home() {
                   />
 
                   <ResizablePanel
-                    ref={insightPanelRef}
                     defaultSize={28}
-                    minSize={20}
+                    minSize={15}
                     maxSize={55}
-                    collapsible
-                    collapsedSize={0}
                   >
                     <InsightPanel
                       promptKey={state.selectedNode as PromptType | null}

@@ -82,9 +82,8 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
 
   return (
     <aside
-      className="flex flex-col flex-shrink-0 h-full"
+      className="flex flex-col h-full w-full"
       style={{
-        width: 232,
         background: '#13131A',
         borderRight: '1px solid #1E1E2E',
         color: '#E6E6EC',
