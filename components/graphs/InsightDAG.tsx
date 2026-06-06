@@ -11,13 +11,13 @@ import {
   type NodeMouseHandler,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sparkles } from 'lucide-react'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { ProductNode } from './ProductNode'
 import { SegmentNode, type SegmentNodeData } from './SegmentNode'
 import { buildInsightElements, getLayoutedInsightElements } from '@/lib/graph-utils'
 import type { Provider } from '@/lib/langgraph/providers'
-import type { PromptType, SegmentSession } from '@/lib/types'
+import type { DagSpec, SegmentSession } from '@/lib/types'
 
 const PRODUCT_ID = '__dag_product__'
 const SEGMENT_ID = '__dag_segment__'
@@ -34,27 +34,29 @@ interface Props {
   segment: string
   provider: Provider
   session: SegmentSession
+  dagSpec: DagSpec | null
   selectedNode: string | null
-  onNodeClick: (promptKey: PromptType) => void
+  onNodeClick: (nodeId: string) => void
   onBack: () => void
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, selectedNode, onNodeClick, onBack }: Props) {
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onBack }: Props) {
+
   const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
-    () => buildInsightElements(segment),
-    [segment]
+    () => dagSpec ? buildInsightElements(segment, dagSpec) : { nodes: [], edges: [], rootIds: [] },
+    [segment, dagSpec]
   )
 
-  // Merge live session status into insight nodes
   const insightNodes: Node[] = useMemo(
     () =>
       baseInsightNodes.map((n) => {
         const promptKey = (n.data as InsightNodeData).promptKey
         const content = session.insights?.[promptKey] ?? null
-        const status = session.status === 'ready' ? 'ready'
-          : session.status === 'loading' ? 'loading'
-          : session.status === 'error' ? 'error'
-          : 'idle'
+        const status =
+          session.status === 'ready'    ? 'ready' :
+          session.status === 'loading'  ? 'loading' :
+          session.status === 'error'    ? 'error' :
+          'idle'
         return {
           ...n,
           selected: selectedNode === promptKey,
@@ -64,7 +66,6 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
     [baseInsightNodes, session, selectedNode]
   )
 
-  // Build full node + edge list including product and segment header nodes
   const { allNodes, allEdges } = useMemo(() => {
     const productNode: Node = {
       id: PRODUCT_ID,
@@ -74,10 +75,12 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
       selectable: false,
     }
 
-    const segmentStatus = session.status === 'loading' ? 'loading'
-      : session.status === 'ready' ? 'ready'
-      : session.status === 'error' ? 'error'
-      : 'idle'
+    const segmentStatus =
+      session.status === 'planning' ? 'planning' :
+      session.status === 'loading'  ? 'loading' :
+      session.status === 'ready'    ? 'ready' :
+      session.status === 'error'    ? 'error' :
+      'idle'
 
     const segmentNode: Node = {
       id: SEGMENT_ID,
@@ -95,7 +98,6 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
         type: 'straight',
         style: { stroke: '#6B62D1', strokeDasharray: '5 4', strokeWidth: 1.5 },
       },
-      // Segment connects to ALL insight nodes
       ...insightNodes.map((n) => ({
         id: `__seg-${n.id}__`,
         source: SEGMENT_ID,
@@ -105,9 +107,7 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
       })),
     ]
 
-    // Re-layout everything together so dagre ranks the header nodes above insight nodes
     const allRaw: Node[] = [productNode, segmentNode, ...insightNodes]
-    // Use only topEdges for dagre layout (insight-to-insight edges handled separately for layout)
     const allEdgesRaw: Edge[] = [...topEdges, ...insightEdges]
     const laid = getLayoutedInsightElements(allRaw, allEdgesRaw)
 
@@ -127,15 +127,14 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
       if (node.id === PRODUCT_ID || node.id === SEGMENT_ID) return
-      const promptKey = (node.data as InsightNodeData).promptKey
-      if (session.status === 'ready') onNodeClick(promptKey)
+      const nodeId = (node.data as InsightNodeData).promptKey as string
+      if (session.status === 'ready') onNodeClick(nodeId)
     },
     [session.status, onNodeClick]
   )
 
   return (
     <div className="h-full relative" style={{ background: '#0A0A0F' }}>
-      {/* Back button */}
       <button
         onClick={onBack}
         className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
@@ -151,6 +150,18 @@ export function InsightDAG({ product, objective, segment, provider, session, sel
         <ArrowLeft size={12} />
         Back
       </button>
+
+      {/* Planning overlay — shown while /api/plan is in flight */}
+      {session.status === 'planning' && (
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3"
+          style={{ background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(4px)' }}
+        >
+          <Sparkles size={20} style={{ color: '#8B5CF6' }} className="animate-pulse" />
+          <p style={{ color: '#C4B5FD', fontSize: 13, fontWeight: 500 }}>Planning analysis&hellip;</p>
+          <p style={{ color: '#5A5A6C', fontSize: 11 }}>The LLM is designing a custom DAG for this segment</p>
+        </div>
+      )}
 
       <ReactFlow
         nodes={allNodes}

@@ -47,7 +47,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         position: getRadialPosition(i, segments.length),
         data: {
           label: seg,
-          status: session.status,
+          status: session.status === 'planning' ? 'planning' : session.status,
           provider,
           error: session.error,
         } satisfies SegmentNodeData,

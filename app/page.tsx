@@ -16,7 +16,7 @@ import { InsightPanel } from "@/components/panels/InsightPanel";
 import { useInsights } from "@/hooks/useInsights";
 import { useGraphState } from "@/hooks/useGraphState";
 import type { Provider } from "@/lib/langgraph/providers";
-import type { ApiKeys, PromptType } from "@/lib/types";
+import type { ApiKeys } from "@/lib/types";
 
 export default function Home() {
   const [segments, setSegments] = useState<string[]>([]);
@@ -50,9 +50,10 @@ export default function Home() {
     runAll(config.segments, { ...config, force: config.force });
   }
 
-  const isRunning = segments.some(
-    (seg) => getSession(seg, state.provider).status === "loading",
-  );
+  const isRunning = segments.some((seg) => {
+    const s = getSession(seg, state.provider).status
+    return s === 'planning' || s === 'loading'
+  });
 
   const activeSession = state.activeSegment
     ? getSession(state.activeSegment, state.provider)
@@ -211,8 +212,9 @@ export default function Home() {
                       segment={state.activeSegment}
                       provider={state.provider}
                       session={activeSession}
+                      dagSpec={activeSession.dagSpec}
                       selectedNode={state.selectedNode}
-                      onNodeClick={(key: PromptType) => selectNode(key)}
+                      onNodeClick={(nodeId: string) => selectNode(nodeId)}
                       onBack={backToSegments}
                     />
                   </ResizablePanel>
@@ -224,12 +226,11 @@ export default function Home() {
 
                   <ResizablePanel defaultSize={28} minSize={15} maxSize={55}>
                     <InsightPanel
-                      promptKey={state.selectedNode as PromptType | null}
+                      promptKey={state.selectedNode}
+                      dagSpec={activeSession.dagSpec}
                       content={
                         state.selectedNode && activeSession.insights
-                          ? activeSession.insights[
-                              state.selectedNode as PromptType
-                            ]
+                          ? activeSession.insights[state.selectedNode]
                           : null
                       }
                       onClose={() => selectNode(null)}

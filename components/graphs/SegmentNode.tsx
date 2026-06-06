@@ -7,7 +7,7 @@ import type { Provider } from '@/lib/langgraph/providers'
 
 export interface SegmentNodeData {
   label: string
-  status: 'idle' | 'loading' | 'ready' | 'error'
+  status: 'idle' | 'planning' | 'loading' | 'ready' | 'error'
   provider: Provider
   error?: string
   [key: string]: unknown
@@ -18,23 +18,26 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
   const providerColor = tokens.providers[d.provider as keyof typeof tokens.providers] ?? '#7A7A8C'
 
   const borderColor =
-    d.status === 'ready'   ? providerColor :
-    d.status === 'loading' ? providerColor :
-    d.status === 'error'   ? '#EF4444' :
+    d.status === 'ready'    ? providerColor :
+    d.status === 'loading'  ? providerColor :
+    d.status === 'planning' ? '#8B5CF6' :
+    d.status === 'error'    ? '#EF4444' :
     '#262633'
 
   const borderWidth = d.status === 'idle' ? 0.5 : 1.5
 
   const statusText =
-    d.status === 'ready'   ? 'Ready' :
-    d.status === 'loading' ? 'Analyzing' :
-    d.status === 'error'   ? 'Error' :
+    d.status === 'ready'    ? 'Ready' :
+    d.status === 'loading'  ? 'Analyzing' :
+    d.status === 'planning' ? 'Planning' :
+    d.status === 'error'    ? 'Error' :
     'Idle'
 
   const statusColor =
-    d.status === 'ready'   ? '#10B981' :
-    d.status === 'loading' ? '#F59E0B' :
-    d.status === 'error'   ? '#EF4444' :
+    d.status === 'ready'    ? '#10B981' :
+    d.status === 'loading'  ? '#F59E0B' :
+    d.status === 'planning' ? '#8B5CF6' :
+    d.status === 'error'    ? '#EF4444' :
     '#5A5A6C'
 
   return (
@@ -86,7 +89,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
 
       {/* Row 2: status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {d.status === 'loading' && (
+        {(d.status === 'loading' || d.status === 'planning') && (
           <span
             className="animate-spin"
             style={{
