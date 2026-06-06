@@ -50,8 +50,9 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
   const insightNodes: Node[] = useMemo(
     () =>
       baseInsightNodes.map((n) => {
-        const promptKey = (n.data as InsightNodeData).promptKey
+        const promptKey = (n.data as InsightNodeData).promptKey as string
         const content = session.insights?.[promptKey] ?? null
+        const stale = session.staleNodeIds.has(promptKey)
         const status =
           session.status === 'ready'    ? 'ready' :
           session.status === 'loading'  ? 'loading' :
@@ -60,7 +61,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
         return {
           ...n,
           selected: selectedNode === promptKey,
-          data: { ...n.data, status, content } as InsightNodeData,
+          data: { ...n.data, status, content, stale } as InsightNodeData,
         }
       }),
     [baseInsightNodes, session, selectedNode]

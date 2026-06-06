@@ -138,6 +138,8 @@ export function useInsights() {
           insights: insights as Record<string, string>,
           generatedAt: new Date(),
           error: undefined,
+          staleNodeIds: new Set<string>(),
+          inputSnapshot: { product: config.product, objective: config.objective, segment },
         }
       } catch (err) {
         sessions.current[key] = {
@@ -220,6 +222,18 @@ export function useInsights() {
     [planSegment, runSegment]
   )
 
+  const markStale = useCallback(
+    (segment: string, provider: Provider) => {
+      const key = `${segment}:${provider}`
+      const session = sessions.current[key]
+      if (!session || session.status !== 'ready') return
+      const allIds = new Set((session.dagSpec?.nodes ?? []).map((n) => n.id))
+      sessions.current[key] = { ...session, staleNodeIds: allIds }
+      forceUpdate((n) => n + 1)
+    },
+    []
+  )
+
   const appendChat = useCallback(
     (segment: string, provider: Provider, message: import('@/lib/types').ChatMessage) => {
       const key = `${segment}:${provider}`
@@ -231,5 +245,5 @@ export function useInsights() {
     []
   )
 
-  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, tick }
+  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markStale, tick }
 }

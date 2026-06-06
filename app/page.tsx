@@ -25,7 +25,7 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(
     new Set(),
   );
-  const { getSession, runAll, tick } = useInsights();
+  const { getSession, runAll, augmentDag, appendChat, markStale, tick } = useInsights();
   const { state, selectSegment, selectNode, backToSegments, setProvider } =
     useGraphState();
 
@@ -49,6 +49,19 @@ export default function Home() {
     setDismissedErrors(new Set());
     runAll(config.segments, { ...config, force: config.force });
   }
+
+  // Mark sessions stale when inputs change after they were run
+  useEffect(() => {
+    segments.forEach((seg) => {
+      const s = getSession(seg, state.provider)
+      if (s.status !== 'ready' || !s.inputSnapshot) return
+      const snap = s.inputSnapshot
+      if (snap.product !== product || snap.objective !== objective || snap.segment !== seg) {
+        markStale(seg, state.provider)
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product, objective, segments.join(','), state.provider])
 
   const isRunning = segments.some((seg) => {
     const s = getSession(seg, state.provider).status
