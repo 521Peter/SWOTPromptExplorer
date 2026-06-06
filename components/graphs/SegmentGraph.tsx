@@ -70,7 +70,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         return {
           ...n,
           data: {
-            ...n.data,
+            ...(n.data as SegmentNodeData),
             status: session.status,
             error: session.error,
           } satisfies SegmentNodeData,
