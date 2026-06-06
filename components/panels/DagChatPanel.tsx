@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageCircle, Send, ChevronDown, ChevronUp, GitBranch, Check } from 'lucide-react'
+import { MessageCircle, Send, GitBranch, Check } from 'lucide-react'
 import { resolveIcon } from '@/lib/icon-map'
 import type { ChatMessage, DagSpec } from '@/lib/types'
 import type { Provider } from '@/lib/langgraph/providers'
@@ -105,22 +105,14 @@ function NodePreviewCard({
 export function DagChatPanel({
   segment, provider, dagSpec, history, keys, product, objective, onSend, onAddNode,
 }: Props) {
-  const [expanded, setExpanded] = useState(false)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Scroll to bottom whenever history changes or panel opens
   useEffect(() => {
-    if (expanded && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [history, expanded])
-
-  useEffect(() => {
-    if (expanded) inputRef.current?.focus()
-  }, [expanded])
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [history])
 
   const send = useCallback(async () => {
     const text = input.trim()
@@ -171,32 +163,17 @@ export function DagChatPanel({
     }
   }
 
-  // Count assistant messages that have pending (not yet added) node suggestions
   const pendingCount = history.filter(
     (m) => m.role === 'assistant' && m.additions?.nodes.length && !m.addedToGraph
   ).length
 
   return (
     <div
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        background: 'rgba(13,13,20,0.97)',
-        borderTop: '0.5px solid #1E1E2E',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'height 0.2s ease',
-        height: expanded ? 220 : 36,
-        overflow: 'hidden',
-      }}
+      className="h-full flex flex-col"
+      style={{ background: '#0D0D14', borderTop: '0.5px solid #1E1E2E' }}
     >
-      {/* Toggle header */}
-      <button
-        onClick={() => setExpanded((v) => !v)}
+      {/* Header */}
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -204,22 +181,14 @@ export function DagChatPanel({
           padding: '0 14px',
           height: 36,
           flexShrink: 0,
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
+          borderBottom: '0.5px solid #1A1A28',
           color: '#5A5A6C',
           fontSize: 12,
           fontWeight: 500,
-          width: '100%',
-          textAlign: 'left',
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#9B9BAC')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#5A5A6C')}
       >
         <MessageCircle size={13} />
         <span>Refine analysis</span>
-
-        {/* Badge: pending node suggestions */}
         {pendingCount > 0 && (
           <span
             style={{
@@ -236,11 +205,7 @@ export function DagChatPanel({
             {pendingCount} node{pendingCount > 1 ? 's' : ''} to add
           </span>
         )}
-
-        <span style={{ marginLeft: 'auto' }}>
-          {expanded ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
-        </span>
-      </button>
+      </div>
 
       {/* Message history */}
       <div

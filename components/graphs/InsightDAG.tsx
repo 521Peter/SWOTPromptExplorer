@@ -15,6 +15,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft, Sparkles, GitCompare } from 'lucide-react'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { DagChatPanel } from '@/components/panels/DagChatPanel'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { ProductNode } from './ProductNode'
@@ -153,8 +154,10 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
     [session.status, onNodeClick, onRerunNode]
   )
 
+  const showChat = session.status === 'ready' && dagSpec && onChatSend && onChatAddNode
+
   return (
-    <div className="h-full relative" style={{ background: '#0A0A0F' }}>
+    <div className="h-full flex flex-col" style={{ background: '#0A0A0F' }}>
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         <button
           onClick={onBack}
@@ -203,44 +206,57 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
         </div>
       )}
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        nodesDraggable
-        nodesConnectable={false}
-        elementsSelectable
-        proOptions={{ hideAttribution: true }}
-        defaultEdgeOptions={{ type: 'default' }}
-        style={{ background: '#0A0A0F', paddingBottom: session.status === 'ready' ? 36 : 0 }}
-      >
-        <Background
-          variant={BackgroundVariant.Dots}
-          color="rgba(255,255,255,0.1)"
-          gap={28}
-          size={1.2}
-        />
-        <Controls style={{ bottom: session.status === 'ready' ? 44 : 10 }} />
-      </ReactFlow>
+      <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
+        <ResizablePanel defaultSize={showChat ? 70 : 100} minSize={30}>
+          <div className="h-full relative">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              nodeTypes={nodeTypes}
+              onNodeClick={handleNodeClick}
+              fitView
+              fitViewOptions={{ padding: 0.2 }}
+              nodesDraggable
+              nodesConnectable={false}
+              elementsSelectable
+              proOptions={{ hideAttribution: true }}
+              defaultEdgeOptions={{ type: 'default' }}
+              style={{ background: '#0A0A0F' }}
+            >
+              <Background
+                variant={BackgroundVariant.Dots}
+                color="rgba(255,255,255,0.1)"
+                gap={28}
+                size={1.2}
+              />
+              <Controls />
+            </ReactFlow>
+          </div>
+        </ResizablePanel>
 
-      {/* Chat panel — only shown when analysis is ready */}
-      {session.status === 'ready' && dagSpec && onChatSend && onChatAddNode && (
-        <DagChatPanel
-          segment={segment}
-          provider={provider}
-          dagSpec={dagSpec}
-          history={session.chat}
-          keys={keys}
-          product={product}
-          objective={objective}
-          onSend={onChatSend}
-          onAddNode={onChatAddNode}
-        />
-      )}
+        {showChat && (
+          <>
+            <ResizableHandle
+              withHandle
+              className="h-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
+            />
+            <ResizablePanel defaultSize={30} minSize={15} maxSize={60}>
+              <DagChatPanel
+                segment={segment}
+                provider={provider}
+                dagSpec={dagSpec!}
+                history={session.chat}
+                keys={keys}
+                product={product}
+                objective={objective}
+                onSend={onChatSend!}
+                onAddNode={onChatAddNode!}
+              />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
   )
 }
