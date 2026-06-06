@@ -585,4 +585,449 @@ US-01 → US-D01                                   [design token foundation]
 
 ---
 
+## Phase 3 — Dynamic DAG Generation
+
+> **Context:** The current DAG shape (9 fixed nodes, fixed causal edges) is hardcoded in `constants/prompt-config.ts`. Phase 3 replaces this with a two-step agentic flow: an LLM *plans* a custom DAG for the given product/objective/segment, then a second LLM execution step runs all planned nodes in parallel. The UI shows users the DAG skeleton before content arrives, making the planning step visible.
+
+---
+
+## Epic 8 — DAG Planning Agent
+
+### US-25 · DagSpec Type Definitions
+**As a** developer,
+**I want** shared TypeScript types for the dynamic DAG specification,
+**so that** the planning API, LangGraph builder, ReactFlow builder, and UI all speak the same schema.
+
+**Acceptance Criteria:**
+- [ ] `lib/types.ts` adds: `DagNode`, `DagEdge`, `DagSpec` interfaces
+- [ ] `DagNode`: `{ id: string, label: string, prompt: string, color: string, iconName: string }`
+- [ ] `DagEdge`: `{ from: string, to: string, relation: EdgeRelation }`
+- [ ] `DagSpec`: `{ nodes: DagNode[], edges: DagEdge[] }`
+- [ ] `EdgeRelation` type already exists in `lib/tokens.ts` — reuse it, do not duplicate
+- [ ] All new types exported and importable from `@/lib/types`
+- [ ] No runtime code — types only, zero bundle impact
+
+**Effort:** XS (10 min)
+**Depends on:** US-01
+
+---
+
+### US-26 · Planning API Route (`/api/plan`)
+**As a** developer,
+**I want** a `POST /api/plan` endpoint that calls an LLM and returns a `DagSpec` tailored to the given product, objective, and segment,
+**so that** the DAG structure is generated at runtime rather than hardcoded.
+
+**Acceptance Criteria:**
+- [ ] `app/api/plan/route.ts` exports a `POST` handler
+- [ ] Accepts JSON body: `{ product, objective, segment, provider, keys, openrouterModel? }`
+- [ ] Uses the same `getLLM(provider, keys)` factory as `/api/insights`
+- [ ] System prompt instructs the LLM to act as a "strategic analysis architect"
+- [ ] User prompt requests 6–10 analysis nodes relevant to the specific product/objective/segment (not always SWOT)
+- [ ] Prompt requires icons from the allowed Lucide set: `Target`, `TrendingUp`, `AlertTriangle`, `Sparkles`, `Shield`, `Crosshair`, `User`, `BarChart2`, `Share2`, `Zap`, `Globe`, `DollarSign`, `Clock`, `Star`
+- [ ] Prompt requires edge relations from the allowed set: `amplifies`, `informs`, `shapes`, `enables`, `activates`
+- [ ] Response is parsed and validated as `DagSpec` before returning
+- [ ] Returns `Response.json({ dagSpec })` on success
+- [ ] Returns HTTP 400 for missing fields; HTTP 500 with message on LLM/parse errors
+- [ ] If LLM returns invalid JSON, retries once before returning 500
+- [ ] Keys are never logged or stored beyond the current request
+
+**Effort:** M (45 min)
+**Depends on:** US-25, US-06, US-09
+
+---
+
+### US-27 · Icon Name → LucideIcon Map
+**As a** developer,
+**I want** a lookup map from icon name strings (returned by the LLM) to actual `LucideIcon` components,
+**so that** `DagNode.iconName` can be resolved at render time without `eval` or dynamic imports.
+
+**Acceptance Criteria:**
+- [ ] `lib/icon-map.ts` exports `ICON_MAP: Record<string, LucideIcon>`
+- [ ] Covers all icons the planning prompt allows: `Target`, `TrendingUp`, `AlertTriangle`, `Sparkles`, `Shield`, `Crosshair`, `User`, `BarChart2`, `Share2`, `Zap`, `Globe`, `DollarSign`, `Clock`, `Star`
+- [ ] Falls back to `BarChart2` for any unrecognised name (guards against LLM hallucinating icon names)
+- [ ] Used in `lib/graph-utils.ts` when building ReactFlow nodes from a `DagSpec`
+
+**Effort:** XS (10 min)
+**Depends on:** US-25
+
+---
+
+## Epic 9 — Dynamic LangGraph Execution
+
+### US-28 · Dynamic InsightState (outputs map)
+**As a** developer,
+**I want** to replace the 9 hardcoded typed annotation fields in `InsightState` with a single `outputs: Record<string, string>` reducer,
+**so that** LangGraph can handle an arbitrary set of node IDs at runtime.
+
+**Acceptance Criteria:**
+- [ ] `lib/langgraph/state.ts` replaces individual output fields (`marketingOKRs`, `strengths`, etc.) with `outputs: Annotation<Record<string, string>>` using a merge reducer: `(prev, next) => ({ ...prev, ...next })`
+- [ ] `dagSpec` field added to state: `Annotation<DagSpec | null>()`
+- [ ] Input fields (`product`, `objective`, `segment`, `provider`) unchanged
+- [ ] `default` for `outputs` is `() => ({})`
+- [ ] `default` for `dagSpec` is `() => null`
+- [ ] File compiles without TypeScript errors
+- [ ] Existing `lib/langgraph/nodes.ts` updated: each node writes `{ outputs: { [nodeId]: content } }` instead of `{ [promptKey]: content }`
+
+**Effort:** S (25 min)
+**Depends on:** US-25, US-05
+
+---
+
+### US-29 · Dynamic Graph Builder
+**As a** developer,
+**I want** `buildInsightGraph` to accept a `DagSpec` and construct LangGraph nodes dynamically from it,
+**so that** execution topology is determined at runtime from the planning output.
+
+**Acceptance Criteria:**
+- [ ] `buildInsightGraph(provider, keys, dagSpec: DagSpec)` signature updated
+- [ ] For each `dagSpec.nodes` entry, a LangGraph node is created with an inline async function
+- [ ] Each node invokes the LLM with the node's `prompt` string from `DagSpec`
+- [ ] System prompt unchanged: `"You are a senior market strategist. Be specific, not generic. Format responses in markdown."`
+- [ ] Each node writes `{ outputs: { [node.id]: responseContent } }` to state
+- [ ] All nodes fan out from `START` and fan in to `END` (parallel execution, same pattern as today)
+- [ ] `PROMPT_CONFIG` is no longer imported by `graph.ts`
+- [ ] `graph.compile()` succeeds for any valid `DagSpec` with 1–20 nodes
+
+**Effort:** M (35 min)
+**Depends on:** US-28, US-06
+
+---
+
+### US-30 · Update `/api/insights` to Accept DagSpec
+**As a** developer,
+**I want** `/api/insights` to accept a `dagSpec` in its request body and forward it to `buildInsightGraph`,
+**so that** the dynamically planned DAG drives execution.
+
+**Acceptance Criteria:**
+- [ ] `app/api/insights/route.ts` accepts optional `dagSpec` in the POST body
+- [ ] If `dagSpec` is present, it is passed directly to `buildInsightGraph`
+- [ ] If `dagSpec` is absent (backwards-compat), the endpoint returns HTTP 400 with message `"dagSpec required"`
+- [ ] Response shape changes: returns `{ insights: Record<string, string> }` keyed by node IDs from `DagSpec` (not hardcoded prompt type keys)
+- [ ] No other behaviour changes
+
+**Effort:** S (20 min)
+**Depends on:** US-29
+
+---
+
+## Epic 10 — Dynamic ReactFlow DAG
+
+### US-31 · `buildInsightElements` Accepts DagSpec
+**As a** developer,
+**I want** `buildInsightElements` in `lib/graph-utils.ts` to accept a `DagSpec` instead of reading from `PROMPT_CONFIG`,
+**so that** the ReactFlow graph structure is driven by the same runtime spec as the LangGraph execution.
+
+**Acceptance Criteria:**
+- [ ] `buildInsightElements(segmentId: string, dagSpec: DagSpec)` signature updated
+- [ ] ReactFlow nodes built from `dagSpec.nodes`; each node's `data` uses `id`, `label`, `color`, `iconName` (resolved via `ICON_MAP`)
+- [ ] ReactFlow edges built from `dagSpec.edges`; style derived from `tokens.edges[relation]` as before
+- [ ] dagre layout applied identically to the existing flow
+- [ ] `PROMPT_CONFIG` is no longer imported by `graph-utils.ts`
+- [ ] Existing dagre node sizing logic preserved
+
+**Effort:** S (25 min)
+**Depends on:** US-25, US-27
+
+---
+
+### US-32 · DAG Skeleton Loading State
+**As a** user,
+**I want** to see the DAG structure (nodes and edges) rendered with loading spinners *before* the insight content arrives,
+**so that** I can observe the LLM's planning decision and understand what will be generated.
+
+**Acceptance Criteria:**
+- [ ] After segment click, the UI shows a "Planning analysis..." state while `/api/plan` is in flight
+- [ ] Once `DagSpec` arrives, all nodes render immediately in `idle` status with correct labels, colors, and icons
+- [ ] Nodes transition from `idle` → `loading` when `/api/insights` starts
+- [ ] Nodes transition from `loading` → `ready` as their content arrives (keyed by `node.id`)
+- [ ] The "Planning..." state is visually distinct from the "Running..." state (different label/icon)
+- [ ] If planning fails, a dismissible error banner is shown and the user can retry
+
+**Effort:** M (40 min)
+**Depends on:** US-26, US-31, US-16
+
+---
+
+### US-33 · InsightDAG Receives DagSpec as Prop
+**As a** developer,
+**I want** `InsightDAG` to accept a `dagSpec` prop and pass it to `buildInsightElements`,
+**so that** the rendered graph always reflects the planned structure for that segment.
+
+**Acceptance Criteria:**
+- [ ] `InsightDAG` props updated: `dagSpec: DagSpec` replaces any dependency on `PROMPT_CONFIG`
+- [ ] `dagSpec` is stored per segment in `useInsights` state (alongside `insights`)
+- [ ] If `dagSpec` is null (planning not yet complete), `InsightDAG` renders a skeleton or null
+- [ ] `onNodeClick` callback passes `node.id` (string) rather than `PromptType` — caller uses this to look up content in `insights` map
+- [ ] No `PromptType` union is referenced in `InsightDAG.tsx` after this change
+
+**Effort:** S (30 min)
+**Depends on:** US-31, US-32
+
+---
+
+### US-34 · InsightPanel Works with Dynamic Node IDs
+**As a** developer,
+**I want** `InsightPanel` to look up content by arbitrary node ID string rather than a fixed `PromptType`,
+**so that** it renders correctly regardless of what the planning LLM named the nodes.
+
+**Acceptance Criteria:**
+- [ ] `InsightPanel` props change: `promptKey: string | null` (was `PromptType | null`)
+- [ ] Panel header (label, icon, color) resolved from the session's `DagSpec` by matching `promptKey` to `dagSpec.nodes[].id`
+- [ ] Content looked up from `session.insights[promptKey]`
+- [ ] Falls back gracefully if `dagSpec` is null or node ID not found
+- [ ] `PromptType` import removed from `InsightPanel.tsx`
+
+**Effort:** S (20 min)
+**Depends on:** US-33
+
+---
+
+### US-35 · Update `useInsights` Hook for Dynamic Outputs
+**As a** developer,
+**I want** `useInsights` to store both the `DagSpec` and a `Record<string, string>` insights map per segment session,
+**so that** the two-phase flow (plan → execute) is reflected in the session state.
+
+**Acceptance Criteria:**
+- [ ] `SegmentSession` type updated: adds `dagSpec: DagSpec | null`; `insights` changes from `Record<PromptType, string>` to `Record<string, string>`
+- [ ] `useInsights` exposes a `plan` step: `planSegment(segment, config)` calls `/api/plan`, stores `dagSpec` in session, triggers re-render
+- [ ] `runSegment` calls `/api/insights` with `dagSpec` from the session
+- [ ] Session status flow: `idle` → `planning` → `running` → `ready` (adds `planning` status)
+- [ ] Cache key unchanged: `${segment}:${provider}`
+- [ ] `planSegment` and `runSegment` can be called in sequence from the parent (no coupling inside the hook)
+
+**Effort:** M (40 min)
+**Depends on:** US-26, US-30
+
+---
+
+## Story Summary (Phase 3 additions)
+
+| ID | Title | Epic | Effort | Depends On |
+|----|-------|------|--------|------------|
+| US-25 | DagSpec Type Definitions | DAG Planning | XS | US-01 |
+| US-26 | Planning API Route `/api/plan` | DAG Planning | M | US-25, US-06, US-09 |
+| US-27 | Icon Name → LucideIcon Map | DAG Planning | XS | US-25 |
+| US-28 | Dynamic InsightState (outputs map) | Dynamic LangGraph | S | US-25, US-05 |
+| US-29 | Dynamic Graph Builder | Dynamic LangGraph | M | US-28, US-06 |
+| US-30 | Update `/api/insights` for DagSpec | Dynamic LangGraph | S | US-29 |
+| US-31 | `buildInsightElements` Accepts DagSpec | Dynamic ReactFlow | S | US-25, US-27 |
+| US-32 | DAG Skeleton Loading State | Dynamic ReactFlow | M | US-26, US-31, US-16 |
+| US-33 | InsightDAG Receives DagSpec as Prop | Dynamic ReactFlow | S | US-31, US-32 |
+| US-34 | InsightPanel Works with Dynamic Node IDs | Dynamic ReactFlow | S | US-33 |
+| US-35 | Update `useInsights` for Dynamic Outputs | Dynamic ReactFlow | M | US-26, US-30 |
+
+**Phase 3 estimated build time:** ~3–4 hours
+
+---
+
+## Phase 3 Build Order (Critical Path)
+
+```
+US-25 (types)
+  └─ US-27 (icon map)
+  └─ US-26 (plan API)  ──────────────────────────────┐
+  └─ US-28 (dynamic state)                           │
+       └─ US-29 (dynamic graph builder)              │
+            └─ US-30 (update /api/insights)          │
+  └─ US-31 (buildInsightElements)  ─────────────────►│
+       └─ US-32 (skeleton loading) ◄─────────────────┘
+            └─ US-33 (InsightDAG prop)  ◄── US-35 (useInsights hook)
+                 └─ US-34 (InsightPanel dynamic IDs)
+```
+
+---
+
+## Phase 4 — Chat-Driven DAG Augmentation & Stale Node Detection
+
+> **Context:** After the dynamic DAG is generated (Phase 3), users need a way to refine and extend it without redoing the whole analysis. A chat bar docked to the bottom of the DAG canvas (the red-box area) lets users ask the LLM to append new nodes. When input parameters (product/objective/segment) change after a session is ready, affected nodes are flagged stale so users can selectively re-run just those nodes rather than restarting from scratch.
+
+---
+
+## Epic 11 — Chat Panel & DAG Augmentation
+
+### US-36 · ChatMessage Type & Session Chat History
+**As a** developer,
+**I want** a `ChatMessage` type and a `chat` history array in `SegmentSession`,
+**so that** the chat panel has a typed data model and conversation history persists per session.
+
+**Acceptance Criteria:**
+- [ ] `lib/types.ts` adds `ChatMessage` interface: `{ role: 'user' | 'assistant', content: string, additions?: { nodes: DagNode[], edges: DagEdge[] } }`
+- [ ] `SegmentSession` gains `chat: ChatMessage[]` field, default `[]`
+- [ ] `useInsights` initialises `chat: []` in new sessions
+- [ ] No runtime code — types and default value only
+
+**Effort:** XS (10 min)
+**Depends on:** US-25
+
+---
+
+### US-37 · `/api/chat` Route
+**As a** developer,
+**I want** a `POST /api/chat` endpoint that takes the user message, current `DagSpec`, and conversation history, and returns either a text reply or a text reply plus new nodes to append,
+**so that** the chat panel can extend the DAG non-destructively via LLM.
+
+**Acceptance Criteria:**
+- [ ] `app/api/chat/route.ts` exports a `POST` handler
+- [ ] Accepts: `{ message, dagSpec, product, objective, segment, history, provider, keys }`
+- [ ] System prompt instructs the LLM: respond in plain text for questions/comments; if the user wants a new analysis lens, also return a JSON `additions` block with new nodes + edges
+- [ ] LLM is told: node ids must be lowercase underscore, must not duplicate existing `dagSpec.nodes[].id` values, `iconName` and `relation` must be from the allowed sets
+- [ ] Response parsed: if raw content contains a fenced `additions` JSON block, extract it; otherwise treat entire content as plain text reply
+- [ ] New node `prompt` strings are fully self-contained (include product/objective/segment inline)
+- [ ] Validates additions: unknown icon names fall back to `BarChart2`; edges referencing unknown node ids are dropped
+- [ ] Returns `{ reply: string, additions?: { nodes: DagNode[], edges: DagEdge[] } }`
+- [ ] Returns HTTP 400 for missing required fields; HTTP 500 on LLM error
+- [ ] Keys never logged or stored
+
+**Effort:** M (45 min)
+**Depends on:** US-36, US-26
+
+---
+
+### US-38 · Chat Panel Component
+**As a** user,
+**I want** a collapsible chat bar docked to the bottom of the DAG canvas (in the empty red-box area),
+**so that** I can ask the LLM to extend the analysis without leaving the graph view.
+
+**Acceptance Criteria:**
+- [ ] `components/panels/DagChatPanel.tsx` renders a sticky bar at the bottom of the DAG canvas
+- [ ] Panel height: ~160px expanded, collapses to a single row (24px) with a `💬 Chat` toggle chip
+- [ ] Collapsed by default; expands on click
+- [ ] Message history scrolls inside the panel; newest message always visible
+- [ ] User messages: right-aligned, `#1E1E2E` bubble
+- [ ] Assistant messages: left-aligned, muted text, with an optional "Added N node(s)" badge if `additions` was returned
+- [ ] Input: full-width text field + Send button; Enter submits, Shift+Enter adds newline
+- [ ] Send button disabled while a chat request is in flight; shows spinner
+- [ ] Panel is only shown when `session.status === 'ready'` or `session.status === 'loading'` (not during planning)
+- [ ] Entire panel sits inside the DAG canvas div, above the ReactFlow `<Controls>`
+
+**Effort:** M (50 min)
+**Depends on:** US-36
+
+---
+
+### US-39 · DagSpec Augmentation (Append Nodes)
+**As a** developer,
+**I want** the chat flow to append new nodes and edges to the existing `DagSpec` non-destructively and immediately queue the new nodes for execution,
+**so that** the DAG grows incrementally without replacing any existing content.
+
+**Acceptance Criteria:**
+- [ ] `useInsights` exposes `augmentDag(segment, provider, additions)` that merges `additions.nodes` and `additions.edges` into `session.dagSpec` (no duplicates by id)
+- [ ] After merging, new nodes are immediately run via `runSegment` for only the new node ids
+- [ ] Existing node content is untouched
+- [ ] `tick` is incremented so ReactFlow re-renders with new nodes
+- [ ] If a new edge references an existing node id (as source or target), that is valid and renders correctly
+
+**Effort:** S (25 min)
+**Depends on:** US-37, US-35
+
+---
+
+### US-40 · New Nodes Positioned Below Existing Layout
+**As a** user,
+**I want** appended nodes to appear below the existing DAG layout rather than overlapping it,
+**so that** the graph remains readable after augmentation.
+
+**Acceptance Criteria:**
+- [ ] `buildInsightElements` detects which nodes in `dagSpec` are "new" (not yet laid out) by comparing against previously positioned nodes
+- [ ] New nodes are initially placed below the lowest `y` coordinate of existing laid-out nodes with a `V_GAP` offset
+- [ ] Dagre re-layout is then applied to the full updated node+edge set so edges route correctly
+- [ ] No existing node positions are meaningfully shifted by the addition (dagre `ranker: 'tight-tree'` or fixed-position option for existing nodes)
+- [ ] If no existing nodes are present, standard layout applies
+
+**Effort:** S (30 min)
+**Depends on:** US-39, US-31
+
+---
+
+## Epic 12 — Stale Node Detection & Selective Re-run
+
+### US-41 · Stale Node Detection
+**As a** developer,
+**I want** the app to detect when `product`, `objective`, or `segment` changes after a session is `ready` and mark the session's nodes as stale,
+**so that** users are informed which analyses may no longer be accurate.
+
+**Acceptance Criteria:**
+- [ ] `SegmentSession` gains `inputSnapshot: { product: string, objective: string, segment: string } | null`
+- [ ] `inputSnapshot` is saved when a session transitions to `ready`
+- [ ] `app/page.tsx` (or `useInsights`) compares current inputs against `inputSnapshot` on each render
+- [ ] When a mismatch is detected, `session.staleNodeIds: Set<string>` is updated to include all node ids whose prompts reference the changed field
+- [ ] For simplicity in v1: any input change marks ALL node ids as stale
+- [ ] `staleNodeIds` resets to empty when the session is re-run
+
+**Effort:** S (25 min)
+**Depends on:** US-35
+
+---
+
+### US-42 · Stale Node UI
+**As a** user,
+**I want** stale insight nodes to show a yellow `⚠` badge,
+**so that** I can see at a glance which analyses were run with different inputs.
+
+**Acceptance Criteria:**
+- [ ] `InsightNodeData` gains optional `stale?: boolean` field
+- [ ] When `stale === true`, `InsightNode` renders a small yellow `⚠` icon in the top-right corner of the node
+- [ ] Node border changes to amber (`#F59E0B`) when stale, regardless of prior status color
+- [ ] Tooltip on hover: `"Run with updated inputs"`
+- [ ] Stale badge is not shown on `productNode` or `segmentNode`
+- [ ] `InsightDAG` passes `stale` flag from `session.staleNodeIds` into each node's data
+
+**Effort:** S (25 min)
+**Depends on:** US-41
+
+---
+
+### US-43 · Single-Node Re-run
+**As a** user,
+**I want** to click a stale insight node and re-run just that node with the current inputs,
+**so that** I can refresh specific analyses without discarding the rest of the session.
+
+**Acceptance Criteria:**
+- [ ] `useInsights` exposes `rerunNode(segment, provider, nodeId, config)` that:
+  - sets the single node's status to `loading` in the insights map
+  - calls `/api/insights` with a single-node `DagSpec` (just that one node + its prompt)
+  - merges the returned output back into `session.insights` without touching other keys
+  - removes `nodeId` from `session.staleNodeIds` on success
+- [ ] `InsightDAG` wires a right-click or secondary-click on a stale node to trigger `rerunNode`
+- [ ] While the single node is loading, other nodes remain fully interactive
+- [ ] On error, the node returns to `error` status; other nodes are unaffected
+- [ ] Single-node re-run respects the same provider/keys as the original session
+
+**Effort:** M (40 min)
+**Depends on:** US-42, US-30
+
+---
+
+## Story Summary (Phase 4 additions)
+
+| ID | Title | Epic | Effort | Depends On |
+|----|-------|------|--------|------------|
+| US-36 | ChatMessage type + session history | Chat | XS | US-25 |
+| US-37 | `/api/chat` route | Chat | M | US-36, US-26 |
+| US-38 | Chat panel component | Chat | M | US-36 |
+| US-39 | DagSpec augmentation (append nodes) | Chat | S | US-37, US-35 |
+| US-40 | New nodes positioned below existing layout | Chat | S | US-39, US-31 |
+| US-41 | Stale node detection | Stale | S | US-35 |
+| US-42 | Stale node UI | Stale | S | US-41 |
+| US-43 | Single-node re-run | Stale | M | US-42, US-30 |
+
+**Phase 4 estimated build time:** ~3–4 hours
+
+---
+
+## Phase 4 Build Order (Critical Path)
+
+```
+US-36 (types)
+  ├─ US-37 (/api/chat) ──────────────────────────────┐
+  ├─ US-38 (chat panel UI)                           │
+  │    └─ US-39 (augment DagSpec) ◄──────────────────┘
+  │         └─ US-40 (node positioning)
+  └─ US-41 (stale detection)
+       └─ US-42 (stale node UI)
+            └─ US-43 (single-node re-run)
+```
+
+---
+
 *Derived from `ARCHITECTURE.md` — Subconscious AI Founding Engineering recruitment process.*
