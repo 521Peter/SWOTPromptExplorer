@@ -29,8 +29,9 @@ export interface PromptMeta {
 }
 
 export interface SegmentSession {
-  status: 'idle' | 'loading' | 'ready' | 'error'
-  insights: Record<PromptType, string> | null
+  status: 'idle' | 'planning' | 'loading' | 'ready' | 'error'
+  dagSpec: DagSpec | null
+  insights: Record<string, string> | null
   provider: Provider
   generatedAt: Date | null
   error?: string
