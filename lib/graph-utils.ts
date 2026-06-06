@@ -1,4 +1,4 @@
-import type { Node, Edge } from '@xyflow/react'
+import { MarkerType, type Node, type Edge } from '@xyflow/react'
 import dagre from 'dagre'
 import type { DagSpec } from '@/lib/types'
 import { tokens } from '@/lib/tokens'
@@ -79,17 +79,25 @@ export function buildInsightElements(
     }
   })
 
+  const edgeColor = (relation: keyof typeof tokens.edges) => tokens.edges[relation]
+
   const edges: Edge[] = dagSpec.edges.map((e) => ({
     id: `${segmentId}:${e.from}-${e.to}`,
     source: `${segmentId}:${e.from}`,
     target: `${segmentId}:${e.to}`,
     label: e.relation,
-    type: 'straight',
+    type: 'smoothstep',
     animated: false,
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 12,
+      height: 12,
+      color: edgeColor(e.relation),
+    },
     style: {
-      stroke: tokens.edges[e.relation],
+      stroke: edgeColor(e.relation),
       strokeDasharray: '4 4',
-      strokeWidth: 1,
+      strokeWidth: 1.5,
     },
     labelStyle: { fill: '#7A7A8C', fontSize: 10 },
     labelBgStyle: { fill: '#13131A' },

@@ -55,12 +55,14 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         gap: 8,
         boxShadow:
           d.status === 'ready'
-            ? `0 0 0 4px ${providerColor}10`
+            ? `0 0 12px 0 ${providerColor}20, 0 0 0 4px ${providerColor}10`
             : selected
             ? '0 0 0 2px #534AB7'
             : 'none',
+        opacity: d.status === 'idle' ? 0.65 : 1,
         cursor: d.status === 'ready' ? 'pointer' : 'default',
         position: 'relative',
+        transition: 'border-color 0.25s ease, box-shadow 0.3s ease, opacity 0.3s ease',
       }}
     >
       {/* Row 1: label */}

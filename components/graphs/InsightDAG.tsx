@@ -6,6 +6,7 @@ import {
   Background,
   Controls,
   BackgroundVariant,
+  MarkerType,
   type Node,
   type Edge,
   type NodeMouseHandler,
@@ -97,21 +98,30 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
       selectable: false,
     }
 
+    const loadingIds = new Set(
+      insightNodes
+        .filter((n) => (n.data as InsightNodeData).status === 'loading')
+        .map((n) => n.id)
+    )
+
     const topEdges: Edge[] = [
       {
         id: '__prod-seg__',
         source: PRODUCT_ID,
         target: SEGMENT_ID,
-        type: 'straight',
+        type: 'smoothstep',
+        animated: session.status === 'planning' || session.status === 'loading',
         style: { stroke: '#6B62D1', strokeDasharray: '5 4', strokeWidth: 1.5 },
-      },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 11, height: 11, color: '#6B62D1' },
+      } as Edge,
       ...insightNodes.map((n) => ({
         id: `__seg-${n.id}__`,
         source: SEGMENT_ID,
         target: n.id,
-        type: 'straight',
-        style: { stroke: '#5A5A7A', strokeDasharray: '5 4', strokeWidth: 1.5 },
-      })),
+        type: 'smoothstep' as const,
+        animated: loadingIds.has(n.id),
+        style: { stroke: '#5A5A7A', strokeDasharray: '5 4', strokeWidth: 1.2 },
+      } as Edge)),
     ]
 
     const allRaw: Node[] = [productNode, segmentNode, ...insightNodes]
@@ -121,14 +131,21 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
     return { allNodes: laid, allEdges: allEdgesRaw }
   }, [product, objective, segment, provider, session.status, insightNodes, insightEdges])
 
+  // Recompute animated state on insight edges based on live node statuses
+  const loadingNodeIds = useMemo(
+    () => new Set(insightNodes.filter((n) => (n.data as InsightNodeData).status === 'loading').map((n) => n.id)),
+    [insightNodes]
+  )
+
   const styledEdges: Edge[] = useMemo(
     () =>
       allEdges.map((e) => ({
         ...e,
+        animated: e.animated || loadingNodeIds.has(e.target),
         labelStyle: { fill: '#7A7A8C', fontSize: 10 },
         labelBgStyle: { fill: '#0A0A0F', padding: 2 },
       })),
-    [allEdges]
+    [allEdges, loadingNodeIds]
   )
 
   const handleNodeClick: NodeMouseHandler = useCallback(
@@ -186,6 +203,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
         nodesConnectable={false}
         elementsSelectable
         proOptions={{ hideAttribution: true }}
+        defaultEdgeOptions={{ type: 'smoothstep' }}
         style={{ background: '#0A0A0F', paddingBottom: session.status === 'ready' ? 36 : 0 }}
       >
         <Background

@@ -33,8 +33,9 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
         alignItems: 'center',
         gap: 10,
         cursor: d.status === 'ready' || d.stale ? 'pointer' : 'default',
-        boxShadow: d.stale ? '0 0 0 3px #F59E0B22' : selected ? `0 0 0 3px ${d.color}14` : 'none',
-        transition: 'border-color 0.15s, box-shadow 0.15s',
+        boxShadow: d.stale ? '0 0 0 3px #F59E0B22' : selected ? `0 0 0 3px ${d.color}30` : d.status === 'ready' ? `0 0 8px 0 ${d.color}18` : 'none',
+        opacity: d.status === 'idle' ? 0.7 : 1,
+        transition: 'border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.3s ease, background 0.2s ease',
         position: 'relative',
       }}
     >

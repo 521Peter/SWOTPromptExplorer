@@ -66,8 +66,8 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         id: `edge-${i}`,
         source: PRODUCT_ID,
         target: seg,
+        type: 'smoothstep',
         style: { stroke: '#5A5A7A', strokeWidth: 1.5, strokeDasharray: '5 4' },
-        type: 'straight',
       })),
     [segments]
   )
@@ -104,6 +104,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         nodesConnectable={false}
         elementsSelectable
         proOptions={{ hideAttribution: true }}
+        defaultEdgeOptions={{ type: 'smoothstep' }}
         style={{ background: '#0A0A0F' }}
       >
         <Background
