@@ -1,6 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import type { EdgeRelation, Provider } from './tokens'
 
+export type { EdgeRelation }
+
 export type PromptType =
   | 'marketingOKRs'
   | 'strengths'
@@ -32,6 +34,25 @@ export interface SegmentSession {
   provider: Provider
   generatedAt: Date | null
   error?: string
+}
+
+export interface DagNode {
+  id: string
+  label: string
+  prompt: string
+  color: string
+  iconName: string
+}
+
+export interface DagEdge {
+  from: string
+  to: string
+  relation: EdgeRelation
+}
+
+export interface DagSpec {
+  nodes: DagNode[]
+  edges: DagEdge[]
 }
 
 export interface ApiKeys {
