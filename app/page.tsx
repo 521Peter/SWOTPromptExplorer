@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
 import {
@@ -25,7 +25,8 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(
     new Set(),
   );
-  const { getSession, runAll, augmentDag, appendChat, markStale, tick } = useInsights();
+  const lastRunConfig = useRef<{ keys: Partial<ApiKeys>; openrouterModel: string } | null>(null);
+  const { getSession, runAll, augmentDag, appendChat, markStale, rerunNode, tick } = useInsights();
   const { state, selectSegment, selectNode, backToSegments, setProvider } =
     useGraphState();
 
@@ -47,6 +48,7 @@ export default function Home() {
     setObjective(config.objective);
     setProvider(config.provider);
     setDismissedErrors(new Set());
+    lastRunConfig.current = { keys: config.keys, openrouterModel: config.openrouterModel };
     runAll(config.segments, { ...config, force: config.force });
   }
 
@@ -228,6 +230,14 @@ export default function Home() {
                       dagSpec={activeSession.dagSpec}
                       selectedNode={state.selectedNode}
                       onNodeClick={(nodeId: string) => selectNode(nodeId)}
+                      onRerunNode={(nodeId: string) =>
+                        rerunNode(state.activeSegment!, state.provider, nodeId, {
+                          product, objective,
+                          provider: state.provider,
+                          keys: lastRunConfig.current?.keys ?? {},
+                          openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                        })
+                      }
                       onBack={backToSegments}
                     />
                   </ResizablePanel>

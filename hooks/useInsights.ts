@@ -222,6 +222,64 @@ export function useInsights() {
     [planSegment, runSegment]
   )
 
+  const rerunNode = useCallback(
+    async (segment: string, provider: Provider, nodeId: string, config: RunConfig) => {
+      const key = `${segment}:${provider}`
+      const session = sessions.current[key]
+      if (!session?.dagSpec) return
+
+      const node = session.dagSpec.nodes.find((n) => n.id === nodeId)
+      if (!node) return
+
+      // Mark just this node as loading in the insights map
+      sessions.current[key] = {
+        ...session,
+        insights: { ...(session.insights ?? {}), [nodeId]: '' },
+      }
+      forceUpdate((n) => n + 1)
+
+      try {
+        const res = await fetch('/api/insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product: config.product,
+            objective: config.objective,
+            segment,
+            provider,
+            keys: config.keys,
+            dagSpec: { nodes: [node], edges: [] },
+          }),
+        })
+
+        if (!res.ok) {
+          const { error } = await res.json()
+          throw new Error(error ?? `HTTP ${res.status}`)
+        }
+
+        const { insights } = await res.json()
+        const cur = sessions.current[key]
+        const updatedStale = new Set(cur.staleNodeIds)
+        updatedStale.delete(nodeId)
+        sessions.current[key] = {
+          ...cur,
+          insights: { ...(cur.insights ?? {}), ...insights },
+          staleNodeIds: updatedStale,
+        }
+      } catch {
+        // restore previous content on error
+        const cur = sessions.current[key]
+        sessions.current[key] = {
+          ...cur,
+          insights: { ...(cur.insights ?? {}), [nodeId]: session.insights?.[nodeId] ?? '' },
+        }
+      }
+
+      forceUpdate((n) => n + 1)
+    },
+    []
+  )
+
   const markStale = useCallback(
     (segment: string, provider: Provider) => {
       const key = `${segment}:${provider}`
@@ -245,5 +303,5 @@ export function useInsights() {
     []
   )
 
-  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markStale, tick }
+  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markStale, rerunNode, tick }
 }

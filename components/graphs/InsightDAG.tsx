@@ -37,10 +37,11 @@ interface Props {
   dagSpec: DagSpec | null
   selectedNode: string | null
   onNodeClick: (nodeId: string) => void
+  onRerunNode?: (nodeId: string) => void
   onBack: () => void
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onBack }: Props) {
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack }: Props) {
 
   const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
     () => dagSpec ? buildInsightElements(segment, dagSpec) : { nodes: [], edges: [], rootIds: [] },
@@ -129,9 +130,14 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
     (_, node) => {
       if (node.id === PRODUCT_ID || node.id === SEGMENT_ID) return
       const nodeId = (node.data as InsightNodeData).promptKey as string
-      if (session.status === 'ready') onNodeClick(nodeId)
+      const stale = (node.data as InsightNodeData).stale
+      if (stale && onRerunNode) {
+        onRerunNode(nodeId)
+      } else if (session.status === 'ready') {
+        onNodeClick(nodeId)
+      }
     },
-    [session.status, onNodeClick]
+    [session.status, onNodeClick, onRerunNode]
   )
 
   return (
