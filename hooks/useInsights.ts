@@ -303,5 +303,19 @@ export function useInsights() {
     []
   )
 
-  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markStale, rerunNode, tick }
+  const markChatNodeAdded = useCallback(
+    (segment: string, provider: Provider, msgIndex: number) => {
+      const key = `${segment}:${provider}`
+      const session = sessions.current[key]
+      if (!session) return
+      const chat = session.chat.map((m, i) =>
+        i === msgIndex ? { ...m, addedToGraph: true } : m
+      )
+      sessions.current[key] = { ...session, chat }
+      forceUpdate((n) => n + 1)
+    },
+    []
+  )
+
+  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, tick }
 }

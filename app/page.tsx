@@ -26,7 +26,7 @@ export default function Home() {
     new Set(),
   );
   const lastRunConfig = useRef<{ keys: Partial<ApiKeys>; openrouterModel: string } | null>(null);
-  const { getSession, runAll, augmentDag, appendChat, markStale, rerunNode, tick } = useInsights();
+  const { getSession, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, tick } = useInsights();
   const { state, selectSegment, selectNode, backToSegments, setProvider } =
     useGraphState();
 
@@ -239,19 +239,22 @@ export default function Home() {
                         })
                       }
                       keys={lastRunConfig.current?.keys ?? {}}
-                      onChatMessage={(userText, assistantMsg, additions) => {
+                      onChatSend={(userText, assistantMsg) => {
                         const seg = state.activeSegment!
                         const prov = state.provider
                         appendChat(seg, prov, { role: 'user', content: userText })
                         appendChat(seg, prov, assistantMsg)
-                        if (additions && additions.nodes.length > 0) {
-                          augmentDag(seg, prov, additions, {
-                            product, objective,
-                            provider: prov,
-                            keys: lastRunConfig.current?.keys ?? {},
-                            openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
-                          })
-                        }
+                      }}
+                      onChatAddNode={(msgIndex, additions) => {
+                        const seg = state.activeSegment!
+                        const prov = state.provider
+                        markChatNodeAdded(seg, prov, msgIndex)
+                        augmentDag(seg, prov, additions, {
+                          product, objective,
+                          provider: prov,
+                          keys: lastRunConfig.current?.keys ?? {},
+                          openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                        })
                       }}
                       onBack={backToSegments}
                     />

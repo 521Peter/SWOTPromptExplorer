@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageCircle, Send, ChevronDown, ChevronUp, Plus } from 'lucide-react'
+import { MessageCircle, Send, ChevronDown, ChevronUp, GitBranch, Check } from 'lucide-react'
+import { resolveIcon } from '@/lib/icon-map'
 import type { ChatMessage, DagSpec } from '@/lib/types'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
@@ -14,16 +15,103 @@ interface Props {
   keys: Partial<ApiKeys>
   product: string
   objective: string
-  onMessage: (userMsg: string, assistantMsg: ChatMessage, additions?: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
+  onSend: (userText: string, assistantMsg: ChatMessage) => void
+  onAddNode: (msgIndex: number, additions: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
 }
 
-export function DagChatPanel({ segment, provider, dagSpec, history, keys, product, objective, onMessage }: Props) {
+function NodePreviewCard({
+  additions,
+  added,
+  onAdd,
+}: {
+  additions: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }
+  added: boolean
+  onAdd: () => void
+}) {
+  const node = additions.nodes[0]
+  if (!node) return null
+  const Icon = resolveIcon(node.iconName)
+
+  return (
+    <div
+      style={{
+        marginTop: 6,
+        border: `0.5px solid ${added ? '#10B98140' : '#2A2A3E'}`,
+        borderRadius: 8,
+        background: added ? '#0D1F1A' : '#0F0F1A',
+        padding: '8px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+      }}
+    >
+      {/* Icon + label */}
+      <span style={{ color: node.color, flexShrink: 0 }}>
+        <Icon size={13} />
+      </span>
+      <span style={{ flex: 1, fontSize: 11, fontWeight: 500, color: '#C4C4D4', lineHeight: 1.3 }}>
+        {node.label}
+      </span>
+
+      {/* Add to graph button */}
+      {added ? (
+        <span
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 10,
+            color: '#10B981',
+            fontWeight: 600,
+            flexShrink: 0,
+          }}
+        >
+          <Check size={11} /> Added
+        </span>
+      ) : (
+        <button
+          onClick={onAdd}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            background: '#1E1A3A',
+            border: '0.5px solid #534AB7',
+            borderRadius: 6,
+            padding: '3px 8px',
+            fontSize: 10,
+            fontWeight: 600,
+            color: '#A89EE8',
+            cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#2D2650'
+            e.currentTarget.style.color = '#C4BAF5'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#1E1A3A'
+            e.currentTarget.style.color = '#A89EE8'
+          }}
+        >
+          <GitBranch size={9} /> Add to graph
+        </button>
+      )}
+    </div>
+  )
+}
+
+export function DagChatPanel({
+  segment, provider, dagSpec, history, keys, product, objective, onSend, onAddNode,
+}: Props) {
   const [expanded, setExpanded] = useState(false)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // Scroll to bottom whenever history changes or panel opens
   useEffect(() => {
     if (expanded && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -50,7 +138,7 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
           product,
           objective,
           segment,
-          history,
+          history: history.map((m) => ({ role: m.role, content: m.content })),
           provider,
           keys,
         }),
@@ -63,18 +151,18 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
         role: 'assistant',
         content: data.reply,
         additions: data.additions,
+        addedToGraph: false,
       }
-      onMessage(text, assistantMsg, data.additions)
+      onSend(text, assistantMsg)
     } catch (err) {
-      const assistantMsg: ChatMessage = {
+      onSend(text, {
         role: 'assistant',
         content: err instanceof Error ? `Error: ${err.message}` : 'Something went wrong.',
-      }
-      onMessage(text, assistantMsg)
+      })
     } finally {
       setLoading(false)
     }
-  }, [input, loading, dagSpec, product, objective, segment, history, provider, keys, onMessage])
+  }, [input, loading, dagSpec, product, objective, segment, history, provider, keys, onSend])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -82,6 +170,11 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
       send()
     }
   }
+
+  // Count assistant messages that have pending (not yet added) node suggestions
+  const pendingCount = history.filter(
+    (m) => m.role === 'assistant' && m.additions?.nodes.length && !m.addedToGraph
+  ).length
 
   return (
     <div
@@ -97,7 +190,7 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
         display: 'flex',
         flexDirection: 'column',
         transition: 'height 0.2s ease',
-        height: expanded ? 200 : 36,
+        height: expanded ? 220 : 36,
         overflow: 'hidden',
       }}
     >
@@ -125,21 +218,25 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
       >
         <MessageCircle size={13} />
         <span>Refine analysis</span>
-        {history.length > 0 && (
+
+        {/* Badge: pending node suggestions */}
+        {pendingCount > 0 && (
           <span
             style={{
               marginLeft: 4,
-              background: '#534AB7',
-              color: '#fff',
+              background: '#534AB730',
+              color: '#A89EE8',
               fontSize: 10,
               fontWeight: 600,
               borderRadius: 99,
               padding: '1px 6px',
+              border: '0.5px solid #534AB7',
             }}
           >
-            {history.length}
+            {pendingCount} node{pendingCount > 1 ? 's' : ''} to add
           </span>
         )}
+
         <span style={{ marginLeft: 'auto' }}>
           {expanded ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
         </span>
@@ -154,62 +251,54 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
           padding: '8px 14px 4px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
+          gap: 10,
           minHeight: 0,
         }}
       >
         {history.length === 0 && (
           <p style={{ color: '#3A3A4C', fontSize: 11, margin: 0 }}>
-            Ask the LLM to add a new analysis node, or ask a question about the current results.
+            Ask a question — the answer will appear here with an option to add it as a graph node.
           </p>
         )}
+
         {history.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              display: 'flex',
-              justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            }}
-          >
+          <div key={i}>
+            {/* Message bubble */}
             <div
               style={{
-                maxWidth: '80%',
-                background: msg.role === 'user' ? '#1E1E2E' : 'transparent',
-                borderRadius: 8,
-                padding: msg.role === 'user' ? '6px 10px' : '2px 0',
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: msg.role === 'user' ? '#C4C4D4' : '#8A8A9C',
+                display: 'flex',
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
               }}
             >
-              {msg.content}
-              {msg.additions && msg.additions.nodes.length > 0 && (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    marginLeft: 8,
-                    background: '#10B98120',
-                    color: '#10B981',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    borderRadius: 99,
-                    padding: '1px 7px',
-                  }}
-                >
-                  <Plus size={9} />
-                  {msg.additions.nodes.length} node{msg.additions.nodes.length > 1 ? 's' : ''} added
-                </span>
-              )}
+              <div
+                style={{
+                  maxWidth: '85%',
+                  background: msg.role === 'user' ? '#1E1E2E' : 'transparent',
+                  borderRadius: 8,
+                  padding: msg.role === 'user' ? '6px 10px' : '2px 0',
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  color: msg.role === 'user' ? '#C4C4D4' : '#8A8A9C',
+                }}
+              >
+                {msg.content}
+              </div>
             </div>
+
+            {/* Node preview card — only on assistant messages with suggestions */}
+            {msg.role === 'assistant' && msg.additions?.nodes.length ? (
+              <NodePreviewCard
+                additions={msg.additions}
+                added={!!msg.addedToGraph}
+                onAdd={() => onAddNode(i, msg.additions!)}
+              />
+            ) : null}
           </div>
         ))}
+
         {loading && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <span style={{ color: '#3A3A4C', fontSize: 11 }}>
-              <span className="animate-pulse">•••</span>
-            </span>
+          <div style={{ color: '#3A3A4C', fontSize: 11 }}>
+            <span className="animate-pulse">•••</span>
           </div>
         )}
       </div>
@@ -230,7 +319,7 @@ export function DagChatPanel({ segment, provider, dagSpec, history, keys, produc
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Add a node, ask a question…"
+          placeholder="Ask about this segment…"
           rows={1}
           style={{
             flex: 1,

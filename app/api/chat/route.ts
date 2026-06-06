@@ -20,31 +20,31 @@ Context:
 - Segment: "${segment}"
 - Existing nodes: ${existingIds || 'none'}
 
-Behaviour rules:
-1. If the user asks a question or makes a comment that does NOT require adding a new analysis node, reply in plain text only.
-2. If the user wants a new analysis lens, angle, or topic added to the DAG, include your text reply AND append a JSON block.
-3. The JSON block must be fenced with triple backticks and tagged "additions":
+You MUST always respond with TWO parts:
+1. A concise plain-text answer to the user's question (2-4 sentences).
+2. A suggested graph node that captures the core insight from your answer as a standalone analysis.
+
+Always append the node suggestion as a fenced JSON block tagged "additions", even if the user did not explicitly ask for a node:
 
 \`\`\`additions
 {
   "nodes": [
-    { "id": "snake_case_id", "label": "Human Label", "prompt": "Full self-contained prompt...", "color": "#hexcolor", "iconName": "IconName" }
+    { "id": "snake_case_id", "label": "Human Label", "prompt": "Full self-contained analysis prompt for this topic including product, objective and segment inline.", "color": "#hexcolor", "iconName": "IconName" }
   ],
   "edges": [
-    { "from": "existing_or_new_id", "to": "existing_or_new_id", "relation": "informs" }
+    { "from": "most_relevant_existing_node_id", "to": "new_node_id", "relation": "informs" }
   ]
 }
 \`\`\`
 
-Constraints for additions:
-- Node ids: lowercase, underscores only, must NOT duplicate: ${dagSpec.nodes.map((n) => n.id).join(', ')}
+Constraints:
+- Node id: lowercase, underscores only, must NOT duplicate: ${dagSpec.nodes.map((n) => n.id).join(', ') || 'none'}
 - iconName must be one of: ${ALLOWED_ICONS.join(', ')}
 - relation must be one of: ${ALLOWED_RELATIONS.join(', ')}
-- Prompts must include product, objective, and segment inline — they are self-contained
-- Add 1–3 nodes per response maximum
-- Edges may reference existing node ids as source or target
-- Keep edges sparse and meaningful
-- Never modify or reference deleting existing nodes`
+- Prompt must be fully self-contained — include product, objective, and segment inline
+- Suggest exactly 1 node per response
+- Edge "from" must be an existing node id; "to" must be the new node id
+- Never suggest modifying or deleting existing nodes`
 }
 
 function parseAdditions(raw: string): { reply: string; additions?: { nodes: DagNode[]; edges: DagEdge[] } } {

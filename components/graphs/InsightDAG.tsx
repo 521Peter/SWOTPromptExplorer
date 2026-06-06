@@ -42,10 +42,11 @@ interface Props {
   onRerunNode?: (nodeId: string) => void
   onBack: () => void
   keys?: Partial<ApiKeys>
-  onChatMessage?: (userMsg: string, assistantMsg: ChatMessage, additions?: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
+  onChatSend?: (userMsg: string, assistantMsg: ChatMessage) => void
+  onChatAddNode?: (msgIndex: number, additions: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatMessage }: Props) {
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatSend, onChatAddNode }: Props) {
 
   const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
     () => dagSpec ? buildInsightElements(segment, dagSpec) : { nodes: [], edges: [], rootIds: [] },
@@ -197,7 +198,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
       </ReactFlow>
 
       {/* Chat panel — only shown when analysis is ready */}
-      {session.status === 'ready' && dagSpec && onChatMessage && (
+      {session.status === 'ready' && dagSpec && onChatSend && onChatAddNode && (
         <DagChatPanel
           segment={segment}
           provider={provider}
@@ -206,7 +207,8 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
           keys={keys}
           product={product}
           objective={objective}
-          onMessage={onChatMessage}
+          onSend={onChatSend}
+          onAddNode={onChatAddNode}
         />
       )}
     </div>

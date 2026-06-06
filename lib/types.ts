@@ -50,7 +50,8 @@ export interface DagSpec {
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
-  additions?: { nodes: DagNode[]; edges: DagEdge[] }
+  additions?: { nodes: DagNode[]; edges: DagEdge[] }  // suggested node from assistant
+  addedToGraph?: boolean                               // true once user clicks "Add to graph"
 }
 
 export interface SegmentSession {
