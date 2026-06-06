@@ -12,12 +12,14 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft, Sparkles } from 'lucide-react'
+import { DagChatPanel } from '@/components/panels/DagChatPanel'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { ProductNode } from './ProductNode'
 import { SegmentNode, type SegmentNodeData } from './SegmentNode'
 import { buildInsightElements, getLayoutedInsightElements } from '@/lib/graph-utils'
 import type { Provider } from '@/lib/langgraph/providers'
-import type { DagSpec, SegmentSession } from '@/lib/types'
+import type { ChatMessage, DagSpec, SegmentSession } from '@/lib/types'
+import type { ApiKeys } from '@/lib/types'
 
 const PRODUCT_ID = '__dag_product__'
 const SEGMENT_ID = '__dag_segment__'
@@ -39,9 +41,11 @@ interface Props {
   onNodeClick: (nodeId: string) => void
   onRerunNode?: (nodeId: string) => void
   onBack: () => void
+  keys?: Partial<ApiKeys>
+  onChatMessage?: (userMsg: string, assistantMsg: ChatMessage, additions?: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack }: Props) {
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatMessage }: Props) {
 
   const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
     () => dagSpec ? buildInsightElements(segment, dagSpec) : { nodes: [], edges: [], rootIds: [] },
@@ -181,7 +185,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
         nodesConnectable={false}
         elementsSelectable
         proOptions={{ hideAttribution: true }}
-        style={{ background: '#0A0A0F' }}
+        style={{ background: '#0A0A0F', paddingBottom: session.status === 'ready' ? 36 : 0 }}
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -189,8 +193,22 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
           gap={28}
           size={1.2}
         />
-        <Controls />
+        <Controls style={{ bottom: session.status === 'ready' ? 44 : 10 }} />
       </ReactFlow>
+
+      {/* Chat panel — only shown when analysis is ready */}
+      {session.status === 'ready' && dagSpec && onChatMessage && (
+        <DagChatPanel
+          segment={segment}
+          provider={provider}
+          dagSpec={dagSpec}
+          history={session.chat}
+          keys={keys}
+          product={product}
+          objective={objective}
+          onMessage={onChatMessage}
+        />
+      )}
     </div>
   )
 }

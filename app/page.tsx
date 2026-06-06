@@ -238,6 +238,21 @@ export default function Home() {
                           openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
                         })
                       }
+                      keys={lastRunConfig.current?.keys ?? {}}
+                      onChatMessage={(userText, assistantMsg, additions) => {
+                        const seg = state.activeSegment!
+                        const prov = state.provider
+                        appendChat(seg, prov, { role: 'user', content: userText })
+                        appendChat(seg, prov, assistantMsg)
+                        if (additions && additions.nodes.length > 0) {
+                          augmentDag(seg, prov, additions, {
+                            product, objective,
+                            provider: prov,
+                            keys: lastRunConfig.current?.keys ?? {},
+                            openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                          })
+                        }
+                      }}
                       onBack={backToSegments}
                     />
                   </ResizablePanel>
