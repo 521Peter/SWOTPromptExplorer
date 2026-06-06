@@ -185,25 +185,32 @@ export function useInsights() {
 
       // Run only the new nodes
       const singleNodeSpec = { nodes: newNodes, edges: [] }
-      const res = await fetch('/api/insights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product: config.product,
-          objective: config.objective,
-          segment,
-          provider,
-          keys: config.keys,
-          dagSpec: singleNodeSpec,
-        }),
-      })
+      try {
+        const res = await fetch('/api/insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product: config.product,
+            objective: config.objective,
+            segment,
+            provider,
+            keys: config.keys,
+            dagSpec: singleNodeSpec,
+          }),
+        })
 
-      if (res.ok) {
-        const { insights } = await res.json()
-        sessions.current[key] = {
-          ...sessions.current[key],
-          insights: { ...(sessions.current[key].insights ?? {}), ...insights },
+        if (res.ok) {
+          const { insights } = await res.json()
+          sessions.current[key] = {
+            ...sessions.current[key],
+            insights: { ...(sessions.current[key].insights ?? {}), ...insights },
+          }
+        } else {
+          const { error } = await res.json()
+          console.error('[augmentDag] insights fetch failed:', error)
         }
+      } catch (err) {
+        console.error('[augmentDag] network error:', err)
       }
       forceUpdate((n) => n + 1)
     },
@@ -211,11 +218,15 @@ export function useInsights() {
   )
 
   const runAll = useCallback(
-    (segments: string[], config: RunConfig) => {
-      Promise.all(
+    async (segments: string[], config: RunConfig) => {
+      await Promise.all(
         segments.map(async (seg) => {
-          const dagSpec = await planSegment(seg, config)
-          if (dagSpec) await runSegment(seg, config)
+          try {
+            const dagSpec = await planSegment(seg, config)
+            if (dagSpec) await runSegment(seg, config)
+          } catch (err) {
+            console.error(`[runAll] segment "${seg}" failed:`, err)
+          }
         })
       )
     },

@@ -1,11 +1,13 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   ReactFlow,
   Background,
   Controls,
   BackgroundVariant,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
   type NodeMouseHandler,
@@ -31,46 +33,52 @@ interface Props {
 }
 
 export function SegmentGraph({ product, objective, segments, provider, getSession, tick, onSegmentClick }: Props) {
-  const nodes: Node[] = useMemo(() => {
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges] = useEdgesState<Edge>([])
+
+  // Rebuild layout only when segments list changes — preserves drag positions
+  useEffect(() => {
     const productNode: Node = {
       id: PRODUCT_ID,
       type: 'productNode',
       position: PRODUCT_NODE_POSITION,
       data: { label: product || 'Product', objective } satisfies ProductNodeData,
     }
-
-    const segmentNodes = segments.map((seg, i) => {
-      const session = getSession(seg, provider)
-      return {
-        id: seg,
-        type: 'segmentNode',
-        position: getRadialPosition(i, segments.length),
-        data: {
-          label: seg,
-          status: session.status === 'planning' ? 'planning' : session.status,
-          provider,
-          error: session.error,
-        } satisfies SegmentNodeData,
-      }
-    })
-
-    return [productNode, ...segmentNodes]
-  },
+    const segmentNodes: Node[] = segments.map((seg, i) => ({
+      id: seg,
+      type: 'segmentNode',
+      position: getRadialPosition(i, segments.length),
+      data: { label: seg, status: 'idle', provider, error: undefined } satisfies SegmentNodeData,
+    }))
+    setNodes([productNode, ...segmentNodes])
+    setEdges(segments.map((seg, i) => ({
+      id: `edge-${i}`,
+      source: PRODUCT_ID,
+      target: seg,
+      type: 'default',
+      style: { stroke: '#5A5A7A', strokeWidth: 1.5, strokeDasharray: '5 4' },
+    })))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [product, objective, segments, provider, getSession, tick])
+  }, [segments.join(','), product, objective, provider])
 
-  // Hub-and-spoke: product node connects to each segment
-  const edges: Edge[] = useMemo(
-    () =>
-      segments.map((seg, i) => ({
-        id: `edge-${i}`,
-        source: PRODUCT_ID,
-        target: seg,
-        type: 'smoothstep',
-        style: { stroke: '#5A5A7A', strokeWidth: 1.5, strokeDasharray: '5 4' },
-      })),
-    [segments]
-  )
+  // Update only data fields on tick — never touch positions
+  useEffect(() => {
+    setNodes((prev) =>
+      prev.map((n) => {
+        if (n.id === PRODUCT_ID) return { ...n, data: { ...n.data, label: product || 'Product', objective } }
+        const session = getSession(n.id, provider)
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            status: session.status,
+            error: session.error,
+          } satisfies SegmentNodeData,
+        }
+      })
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, product, objective])
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
@@ -100,11 +108,12 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         onNodeClick={onNodeClick}
         fitView
         fitViewOptions={{ padding: 0.3 }}
-        nodesDraggable={false}
+        onNodesChange={onNodesChange}
+        nodesDraggable
         nodesConnectable={false}
         elementsSelectable
         proOptions={{ hideAttribution: true }}
-        defaultEdgeOptions={{ type: 'smoothstep' }}
+        defaultEdgeOptions={{ type: 'default' }}
         style={{ background: '#0A0A0F' }}
       >
         <Background

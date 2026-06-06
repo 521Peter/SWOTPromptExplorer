@@ -1,12 +1,14 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
 import {
   ReactFlow,
   Background,
   Controls,
   BackgroundVariant,
   MarkerType,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
   type NodeMouseHandler,
@@ -49,104 +51,91 @@ interface Props {
 
 export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatSend, onChatAddNode }: Props) {
 
-  const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
-    () => dagSpec ? buildInsightElements(segment, dagSpec) : { nodes: [], edges: [], rootIds: [] },
-    [segment, dagSpec]
-  )
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges] = useEdgesState<Edge>([])
 
-  const insightNodes: Node[] = useMemo(
-    () =>
-      baseInsightNodes.map((n) => {
-        const promptKey = (n.data as InsightNodeData).promptKey as string
-        const content = session.insights?.[promptKey] ?? null
-        const stale = session.staleNodeIds.has(promptKey)
-        const status =
-          session.status === 'ready'    ? 'ready' :
-          session.status === 'loading'  ? 'loading' :
-          session.status === 'error'    ? 'error' :
-          'idle'
-        return {
-          ...n,
-          selected: selectedNode === promptKey,
-          data: { ...n.data, status, content, stale } as InsightNodeData,
-        }
-      }),
-    [baseInsightNodes, session, selectedNode]
-  )
+  // Rebuild layout only when dagSpec changes (preserves drag positions across session updates)
+  useEffect(() => {
+    if (!dagSpec) { setNodes([]); setEdges([]); return }
 
-  const { allNodes, allEdges } = useMemo(() => {
+    const { nodes: insightNodes, edges: insightEdges } = buildInsightElements(segment, dagSpec)
+
     const productNode: Node = {
-      id: PRODUCT_ID,
-      type: 'productNode',
-      position: { x: 0, y: 0 },
-      data: { label: product || 'Product', objective },
-      selectable: false,
+      id: PRODUCT_ID, type: 'productNode', position: { x: 0, y: 0 },
+      data: { label: product || 'Product', objective }, selectable: false,
     }
-
-    const segmentStatus =
-      session.status === 'planning' ? 'planning' :
-      session.status === 'loading'  ? 'loading' :
-      session.status === 'ready'    ? 'ready' :
-      session.status === 'error'    ? 'error' :
-      'idle'
-
     const segmentNode: Node = {
-      id: SEGMENT_ID,
-      type: 'segmentNode',
-      position: { x: 0, y: 0 },
-      data: { label: segment, status: segmentStatus, provider } satisfies SegmentNodeData,
-      selectable: false,
+      id: SEGMENT_ID, type: 'segmentNode', position: { x: 0, y: 0 },
+      data: { label: segment, status: 'idle', provider } satisfies SegmentNodeData, selectable: false,
     }
-
-    const loadingIds = new Set(
-      insightNodes
-        .filter((n) => (n.data as InsightNodeData).status === 'loading')
-        .map((n) => n.id)
-    )
-
     const topEdges: Edge[] = [
       {
-        id: '__prod-seg__',
-        source: PRODUCT_ID,
-        target: SEGMENT_ID,
-        type: 'smoothstep',
-        animated: session.status === 'planning' || session.status === 'loading',
+        id: '__prod-seg__', source: PRODUCT_ID, target: SEGMENT_ID, type: 'default',
+        animated: false,
         style: { stroke: '#6B62D1', strokeDasharray: '5 4', strokeWidth: 1.5 },
         markerEnd: { type: MarkerType.ArrowClosed, width: 11, height: 11, color: '#6B62D1' },
       } as Edge,
       ...insightNodes.map((n) => ({
-        id: `__seg-${n.id}__`,
-        source: SEGMENT_ID,
-        target: n.id,
-        type: 'smoothstep' as const,
-        animated: loadingIds.has(n.id),
+        id: `__seg-${n.id}__`, source: SEGMENT_ID, target: n.id, type: 'default' as const,
+        animated: false,
         style: { stroke: '#5A5A7A', strokeDasharray: '5 4', strokeWidth: 1.2 },
       } as Edge)),
     ]
 
-    const allRaw: Node[] = [productNode, segmentNode, ...insightNodes]
-    const allEdgesRaw: Edge[] = [...topEdges, ...insightEdges]
-    const laid = getLayoutedInsightElements(allRaw, allEdgesRaw)
+    const allRaw = [productNode, segmentNode, ...insightNodes]
+    const allEdgesRaw = [...topEdges, ...insightEdges]
+    setNodes(getLayoutedInsightElements(allRaw, allEdgesRaw))
+    setEdges(allEdgesRaw)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dagSpec, segment])
 
-    return { allNodes: laid, allEdges: allEdgesRaw }
-  }, [product, objective, segment, provider, session.status, insightNodes, insightEdges])
+  // Update only data fields when session changes — never touch positions
+  useEffect(() => {
+    const segmentStatus =
+      session.status === 'planning' ? 'planning' :
+      session.status === 'loading'  ? 'loading' :
+      session.status === 'ready'    ? 'ready' :
+      session.status === 'error'    ? 'error' : 'idle'
 
-  // Recompute animated state on insight edges based on live node statuses
-  const loadingNodeIds = useMemo(
-    () => new Set(insightNodes.filter((n) => (n.data as InsightNodeData).status === 'loading').map((n) => n.id)),
-    [insightNodes]
-  )
+    setNodes((prev) =>
+      prev.map((n) => {
+        if (n.id === SEGMENT_ID) {
+          return { ...n, data: { ...n.data, status: segmentStatus } }
+        }
+        if (n.id === PRODUCT_ID) return n
+        const promptKey = (n.data as InsightNodeData).promptKey as string
+        const content = session.insights?.[promptKey] ?? null
+        const stale = session.staleNodeIds.has(promptKey)
+        const nodeStatus =
+          session.status === 'ready'   ? 'ready' :
+          session.status === 'loading' ? 'loading' :
+          session.status === 'error'   ? 'error' : 'idle'
+        return { ...n, data: { ...n.data, status: nodeStatus, content, stale } }
+      })
+    )
 
-  const styledEdges: Edge[] = useMemo(
-    () =>
-      allEdges.map((e) => ({
-        ...e,
-        animated: e.animated || loadingNodeIds.has(e.target),
-        labelStyle: { fill: '#7A7A8C', fontSize: 10 },
-        labelBgStyle: { fill: '#0A0A0F', padding: 2 },
-      })),
-    [allEdges, loadingNodeIds]
-  )
+    const isLoading = session.status === 'loading' || session.status === 'planning'
+    setEdges((prev) =>
+      prev.map((e) => {
+        if (e.id === '__prod-seg__') return { ...e, animated: isLoading }
+        if (e.id.startsWith('__seg-')) return { ...e, animated: isLoading }
+        return e
+      })
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
+
+  // Update selected state without touching positions
+  useEffect(() => {
+    setNodes((prev) =>
+      prev.map((n) => {
+        if (n.id === PRODUCT_ID || n.id === SEGMENT_ID) return n
+        const promptKey = (n.data as InsightNodeData).promptKey as string
+        return { ...n, selected: selectedNode === promptKey }
+      })
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode])
 
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
@@ -193,17 +182,18 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
       )}
 
       <ReactFlow
-        nodes={allNodes}
-        edges={styledEdges}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        nodesDraggable={false}
+        nodesDraggable
         nodesConnectable={false}
         elementsSelectable
         proOptions={{ hideAttribution: true }}
-        defaultEdgeOptions={{ type: 'smoothstep' }}
+        defaultEdgeOptions={{ type: 'default' }}
         style={{ background: '#0A0A0F', paddingBottom: session.status === 'ready' ? 36 : 0 }}
       >
         <Background

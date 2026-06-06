@@ -46,8 +46,9 @@ export function getLayoutedInsightElements(
   dagre.layout(g)
 
   return nodes.map((n) => {
-    const { x, y, width, height } = g.node(n.id)
-    return { ...n, position: { x: x - width / 2, y: y - height / 2 } }
+    const pos = g.node(n.id)
+    if (!pos) return n
+    return { ...n, position: { x: pos.x - pos.width / 2, y: pos.y - pos.height / 2 } }
   })
 }
 
@@ -86,7 +87,7 @@ export function buildInsightElements(
     source: `${segmentId}:${e.from}`,
     target: `${segmentId}:${e.to}`,
     label: e.relation,
-    type: 'smoothstep',
+    type: 'default',
     animated: false,
     markerEnd: {
       type: MarkerType.ArrowClosed,

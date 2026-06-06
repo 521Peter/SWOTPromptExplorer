@@ -97,6 +97,19 @@ export async function POST(req: Request) {
     )
   }
 
+  if (provider === 'openrouter' && !keys?.openrouter) {
+    return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+  if (provider === 'openai' && !keys?.openai) {
+    return NextResponse.json({ error: 'OpenAI API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+  if (provider === 'claude' && !keys?.anthropic) {
+    return NextResponse.json({ error: 'Anthropic API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+  if (provider === 'groq' && !keys?.groq) {
+    return NextResponse.json({ error: 'Groq API key is missing. Open Settings and enter your key.' }, { status: 400 })
+  }
+
   const llm = getLLM(provider, keys)
 
   const messages = [

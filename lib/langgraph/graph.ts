@@ -5,6 +5,9 @@ import { getLLM, type Provider } from './providers'
 import type { ApiKeys, DagSpec } from '@/lib/types'
 
 export function buildInsightGraph(provider: Provider, keys: Partial<ApiKeys>, dagSpec: DagSpec) {
+  if (!dagSpec.nodes || dagSpec.nodes.length === 0) {
+    throw new Error('dagSpec must contain at least one node')
+  }
   const llm = getLLM(provider, keys)
   const graph = new StateGraph(InsightState)
 
