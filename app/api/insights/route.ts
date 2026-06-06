@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { buildInsightGraph } from '@/lib/langgraph/graph'
 import type { Provider } from '@/lib/langgraph/providers'
-import type { ApiKeys, PromptType } from '@/lib/types'
+import type { ApiKeys, DagSpec } from '@/lib/types'
 
 export async function POST(req: Request) {
   let body: {
@@ -10,6 +10,7 @@ export async function POST(req: Request) {
     segment?: string
     provider?: Provider
     keys?: Partial<ApiKeys>
+    dagSpec?: DagSpec
   }
 
   try {
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { product, objective, segment, provider, keys = {} } = body
+  const { product, objective, segment, provider, keys = {}, dagSpec } = body
 
   if (!product || !objective || !segment || !provider) {
     return NextResponse.json(
@@ -27,7 +28,10 @@ export async function POST(req: Request) {
     )
   }
 
-  // Reject clearly empty keys rather than letting the LLM call fail opaquely
+  if (!dagSpec) {
+    return NextResponse.json({ error: 'dagSpec required' }, { status: 400 })
+  }
+
   if (provider === 'openrouter' && !keys?.openrouter) {
     return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
   }
@@ -42,16 +46,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const graph = buildInsightGraph(provider, keys)
-    const result = await graph.invoke({ product, objective, segment, provider })
-
-    // Strip input fields, return only the 9 insight keys
-    const { product: _p, objective: _o, segment: _s, provider: _pr, ...insights } = result
+    const graph = buildInsightGraph(provider, keys, dagSpec)
+    const result = await graph.invoke({ product, objective, segment, provider, dagSpec, outputs: {} })
 
     return NextResponse.json({
       segment,
       provider,
-      insights: insights as Record<PromptType, string>,
+      insights: result.outputs as Record<string, string>,
     })
   } catch (err) {
     console.error('[/api/insights] LLM error:', err)
@@ -61,7 +62,6 @@ export async function POST(req: Request) {
 
 function extractMessage(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err)
-  // Provider errors embed JSON: "401 {\"type\":\"error\",\"error\":{\"message\":\"...\"}}"
   const jsonMatch = raw.match(/\{[\s\S]*\}/)
   if (jsonMatch) {
     try {
@@ -70,6 +70,5 @@ function extractMessage(err: unknown): string {
       if (parsed?.message) return parsed.message
     } catch { /* not valid JSON, fall through */ }
   }
-  // Strip LangChain troubleshooting URL suffix
   return raw.split('\n')[0].replace(/\s*Troubleshooting URL:.*$/, '').trim()
 }
