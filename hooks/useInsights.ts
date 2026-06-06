@@ -27,6 +27,9 @@ export function useInsights() {
           insights: null,
           provider,
           generatedAt: null,
+          chat: [],
+          staleNodeIds: new Set<string>(),
+          inputSnapshot: null,
         }
       )
     },
@@ -45,6 +48,9 @@ export function useInsights() {
         provider: config.provider,
         generatedAt: null,
         error: undefined,
+        chat: [],
+        staleNodeIds: new Set<string>(),
+        inputSnapshot: null,
       }
       forceUpdate((n) => n + 1)
 

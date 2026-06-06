@@ -28,15 +28,6 @@ export interface PromptMeta {
   causalEdges: CausalEdge[]
 }
 
-export interface SegmentSession {
-  status: 'idle' | 'planning' | 'loading' | 'ready' | 'error'
-  dagSpec: DagSpec | null
-  insights: Record<string, string> | null
-  provider: Provider
-  generatedAt: Date | null
-  error?: string
-}
-
 export interface DagNode {
   id: string
   label: string
@@ -54,6 +45,24 @@ export interface DagEdge {
 export interface DagSpec {
   nodes: DagNode[]
   edges: DagEdge[]
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  additions?: { nodes: DagNode[]; edges: DagEdge[] }
+}
+
+export interface SegmentSession {
+  status: 'idle' | 'planning' | 'loading' | 'ready' | 'error'
+  dagSpec: DagSpec | null
+  insights: Record<string, string> | null
+  provider: Provider
+  generatedAt: Date | null
+  error?: string
+  chat: ChatMessage[]
+  staleNodeIds: Set<string>
+  inputSnapshot: { product: string; objective: string; segment: string } | null
 }
 
 export interface ApiKeys {
