@@ -154,6 +154,60 @@ export function useInsights() {
     []
   )
 
+  const augmentDag = useCallback(
+    async (
+      segment: string,
+      provider: Provider,
+      additions: { nodes: import('@/lib/types').DagNode[]; edges: import('@/lib/types').DagEdge[] },
+      config: RunConfig
+    ) => {
+      const key = `${segment}:${provider}`
+      const session = sessions.current[key]
+      if (!session?.dagSpec) return
+
+      // Merge new nodes/edges, skip duplicates by id
+      const existingNodeIds = new Set(session.dagSpec.nodes.map((n) => n.id))
+      const newNodes = additions.nodes.filter((n) => !existingNodeIds.has(n.id))
+      const existingEdgeIds = new Set(session.dagSpec.edges.map((e) => `${e.from}-${e.to}`))
+      const newEdges = additions.edges.filter((e) => !existingEdgeIds.has(`${e.from}-${e.to}`))
+
+      if (newNodes.length === 0) return
+
+      const updatedSpec = {
+        nodes: [...session.dagSpec.nodes, ...newNodes],
+        edges: [...session.dagSpec.edges, ...newEdges],
+      }
+
+      sessions.current[key] = { ...session, dagSpec: updatedSpec }
+      forceUpdate((n) => n + 1)
+
+      // Run only the new nodes
+      const singleNodeSpec = { nodes: newNodes, edges: [] }
+      const res = await fetch('/api/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product: config.product,
+          objective: config.objective,
+          segment,
+          provider,
+          keys: config.keys,
+          dagSpec: singleNodeSpec,
+        }),
+      })
+
+      if (res.ok) {
+        const { insights } = await res.json()
+        sessions.current[key] = {
+          ...sessions.current[key],
+          insights: { ...(sessions.current[key].insights ?? {}), ...insights },
+        }
+      }
+      forceUpdate((n) => n + 1)
+    },
+    []
+  )
+
   const runAll = useCallback(
     (segments: string[], config: RunConfig) => {
       Promise.all(
@@ -166,5 +220,16 @@ export function useInsights() {
     [planSegment, runSegment]
   )
 
-  return { getSession, planSegment, runSegment, runAll, tick }
+  const appendChat = useCallback(
+    (segment: string, provider: Provider, message: import('@/lib/types').ChatMessage) => {
+      const key = `${segment}:${provider}`
+      const session = sessions.current[key]
+      if (!session) return
+      sessions.current[key] = { ...session, chat: [...session.chat, message] }
+      forceUpdate((n) => n + 1)
+    },
+    []
+  )
+
+  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, tick }
 }

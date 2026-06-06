@@ -53,21 +53,31 @@ export function getLayoutedInsightElements(
 
 export function buildInsightElements(
   segmentId: string,
-  dagSpec: DagSpec
+  dagSpec: DagSpec,
+  existingPositions?: Map<string, { x: number; y: number }>
 ): { nodes: Node[]; edges: Edge[]; rootIds: string[] } {
-  const nodes: Node[] = dagSpec.nodes.map((n) => ({
-    id: `${segmentId}:${n.id}`,
-    type: 'insightNode',
-    position: { x: 0, y: 0 },
-    data: {
-      promptKey: n.id,
-      label: n.label,
-      color: n.color,
-      icon: resolveIcon(n.iconName),
-      status: 'idle',
-      content: null,
-    },
-  }))
+  // Determine the lowest y among already-positioned nodes so new ones appear below
+  let baseY = 0
+  if (existingPositions && existingPositions.size > 0) {
+    baseY = Math.max(...Array.from(existingPositions.values()).map((p) => p.y)) + NODE_H + 80
+  }
+
+  const nodes: Node[] = dagSpec.nodes.map((n) => {
+    const existingPos = existingPositions?.get(`${segmentId}:${n.id}`)
+    return {
+      id: `${segmentId}:${n.id}`,
+      type: 'insightNode',
+      position: existingPos ?? { x: 0, y: baseY },
+      data: {
+        promptKey: n.id,
+        label: n.label,
+        color: n.color,
+        icon: resolveIcon(n.iconName),
+        status: 'idle',
+        content: null,
+      },
+    }
+  })
 
   const edges: Edge[] = dagSpec.edges.map((e) => ({
     id: `${segmentId}:${e.from}-${e.to}`,
