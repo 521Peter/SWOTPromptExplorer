@@ -328,5 +328,13 @@ export function useInsights() {
     []
   )
 
-  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, tick }
+  const getProvidersWithResults = useCallback(
+    (segment: string): Provider[] => {
+      const ALL: Provider[] = ['openrouter', 'openai', 'claude', 'groq']
+      return ALL.filter((p) => sessions.current[`${segment}:${p}`]?.status === 'ready')
+    },
+    []
+  )
+
+  return { getSession, planSegment, runSegment, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, getProvidersWithResults, tick }
 }

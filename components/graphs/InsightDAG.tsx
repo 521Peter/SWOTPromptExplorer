@@ -14,7 +14,7 @@ import {
   type NodeMouseHandler,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, Sparkles } from 'lucide-react'
+import { ArrowLeft, Sparkles, GitCompare } from 'lucide-react'
 import { DagChatPanel } from '@/components/panels/DagChatPanel'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { ProductNode } from './ProductNode'
@@ -47,9 +47,11 @@ interface Props {
   keys?: Partial<ApiKeys>
   onChatSend?: (userMsg: string, assistantMsg: ChatMessage) => void
   onChatAddNode?: (msgIndex: number, additions: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
+  availableProviders?: Provider[]
+  onCompare?: () => void
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatSend, onChatAddNode }: Props) {
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatSend, onChatAddNode, availableProviders = [], onCompare }: Props) {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges] = useEdgesState<Edge>([])
@@ -153,21 +155,41 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
 
   return (
     <div className="h-full relative" style={{ background: '#0A0A0F' }}>
-      <button
-        onClick={onBack}
-        className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        style={{
-          background: 'rgba(19,19,26,0.85)',
-          border: '0.5px solid #1E1E2E',
-          color: '#7A7A8C',
-          backdropFilter: 'blur(8px)',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#E6E6EC')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#7A7A8C')}
-      >
-        <ArrowLeft size={12} />
-        Back
-      </button>
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          style={{
+            background: 'rgba(19,19,26,0.85)',
+            border: '0.5px solid #1E1E2E',
+            color: '#7A7A8C',
+            backdropFilter: 'blur(8px)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#E6E6EC')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#7A7A8C')}
+        >
+          <ArrowLeft size={12} />
+          Back
+        </button>
+
+        {availableProviders.length > 1 && onCompare && (
+          <button
+            onClick={onCompare}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            style={{
+              background: 'rgba(83,74,183,0.15)',
+              border: '0.5px solid #534AB7',
+              color: '#9D94F0',
+              backdropFilter: 'blur(8px)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#C4BFFF')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#9D94F0')}
+          >
+            <GitCompare size={12} />
+            Compare providers
+          </button>
+        )}
+      </div>
 
       {/* Planning overlay — shown while /api/plan is in flight */}
       {session.status === 'planning' && (

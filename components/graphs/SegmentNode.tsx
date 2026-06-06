@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import { motion } from 'framer-motion'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { tokens } from '@/lib/tokens'
 import type { Provider } from '@/lib/langgraph/providers'
@@ -10,6 +11,7 @@ export interface SegmentNodeData {
   status: 'idle' | 'planning' | 'loading' | 'ready' | 'error'
   provider: Provider
   error?: string
+  animIndex?: number
   [key: string]: unknown
 }
 
@@ -41,6 +43,11 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
     '#5A5A6C'
 
   return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.32, delay: (d.animIndex ?? 0) * 0.07, ease: 'easeOut' }}
+    >
     <div
       style={{
         minWidth: 160,
@@ -113,6 +120,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
     </div>
+    </motion.div>
   )
 }
 

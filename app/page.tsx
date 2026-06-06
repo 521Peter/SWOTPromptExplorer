@@ -15,6 +15,7 @@ import { InsightDAG } from "@/components/graphs/InsightDAG";
 import { InsightPanel } from "@/components/panels/InsightPanel";
 import { useInsights } from "@/hooks/useInsights";
 import { useGraphState } from "@/hooks/useGraphState";
+import { ComparePanel } from "@/components/panels/ComparePanel";
 import type { Provider } from "@/lib/langgraph/providers";
 import type { ApiKeys } from "@/lib/types";
 
@@ -25,8 +26,9 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(
     new Set(),
   );
+  const [isComparing, setIsComparing] = useState(false);
   const lastRunConfig = useRef<{ keys: Partial<ApiKeys>; openrouterModel: string } | null>(null);
-  const { getSession, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, tick } = useInsights();
+  const { getSession, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, getProvidersWithResults, tick } = useInsights();
   const { state, selectSegment, selectNode, backToSegments, setProvider } =
     useGraphState();
 
@@ -35,6 +37,7 @@ export default function Home() {
   }
 
   function handleRun(config: {
+
     product: string;
     objective: string;
     segments: string[];
@@ -48,6 +51,7 @@ export default function Home() {
     setObjective(config.objective);
     setProvider(config.provider);
     setDismissedErrors(new Set());
+    setIsComparing(false);
     lastRunConfig.current = { keys: config.keys, openrouterModel: config.openrouterModel };
     runAll(config.segments, { ...config, force: config.force });
   }
@@ -229,6 +233,8 @@ export default function Home() {
                       session={activeSession}
                       dagSpec={activeSession.dagSpec}
                       selectedNode={state.selectedNode}
+                      availableProviders={getProvidersWithResults(state.activeSegment)}
+                      onCompare={() => setIsComparing(true)}
                       onNodeClick={(nodeId: string) => selectNode(nodeId)}
                       onRerunNode={(nodeId: string) =>
                         rerunNode(state.activeSegment!, state.provider, nodeId, {
@@ -266,16 +272,28 @@ export default function Home() {
                   />
 
                   <ResizablePanel defaultSize={28} minSize={15} maxSize={55}>
-                    <InsightPanel
-                      promptKey={state.selectedNode}
-                      dagSpec={activeSession.dagSpec}
-                      content={
-                        state.selectedNode && activeSession.insights
-                          ? activeSession.insights[state.selectedNode]
-                          : null
-                      }
-                      onClose={() => selectNode(null)}
-                    />
+                    {isComparing && activeSession.dagSpec ? (
+                      <ComparePanel
+                        segment={state.activeSegment}
+                        primaryProvider={state.provider}
+                        availableProviders={getProvidersWithResults(state.activeSegment)}
+                        getSession={getSession}
+                        dagSpec={activeSession.dagSpec}
+                        selectedNode={state.selectedNode}
+                        onClose={() => setIsComparing(false)}
+                      />
+                    ) : (
+                      <InsightPanel
+                        promptKey={state.selectedNode}
+                        dagSpec={activeSession.dagSpec}
+                        content={
+                          state.selectedNode && activeSession.insights
+                            ? activeSession.insights[state.selectedNode]
+                            : null
+                        }
+                        onClose={() => selectNode(null)}
+                      />
+                    )}
                   </ResizablePanel>
                 </ResizablePanelGroup>
               </motion.div>

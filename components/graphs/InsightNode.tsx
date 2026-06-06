@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import { motion } from 'framer-motion'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { AlertTriangle } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -13,6 +14,7 @@ export interface InsightNodeData {
   status: 'idle' | 'loading' | 'ready' | 'error'
   content: string | null
   stale?: boolean
+  animIndex?: number
   [key: string]: unknown
 }
 
@@ -21,6 +23,11 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
   const Icon = d.icon
 
   return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.88, y: 14 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.28, delay: (d.animIndex ?? 0) * 0.055, ease: 'easeOut' }}
+    >
     <div
       title={d.stale ? 'Run with updated inputs' : undefined}
       style={{
@@ -84,6 +91,7 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
     </div>
+    </motion.div>
   )
 }
 

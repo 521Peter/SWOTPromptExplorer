@@ -63,7 +63,7 @@ export function buildInsightElements(
     baseY = Math.max(...Array.from(existingPositions.values()).map((p) => p.y)) + NODE_H + 80
   }
 
-  const nodes: Node[] = dagSpec.nodes.map((n) => {
+  const nodes: Node[] = dagSpec.nodes.map((n, idx) => {
     const existingPos = existingPositions?.get(`${segmentId}:${n.id}`)
     return {
       id: `${segmentId}:${n.id}`,
@@ -76,6 +76,7 @@ export function buildInsightElements(
         icon: resolveIcon(n.iconName),
         status: 'idle',
         content: null,
+        animIndex: idx,
       },
     }
   })

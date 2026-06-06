@@ -48,7 +48,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
       id: seg,
       type: 'segmentNode',
       position: getRadialPosition(i, segments.length),
-      data: { label: seg, status: 'idle', provider, error: undefined } satisfies SegmentNodeData,
+      data: { label: seg, status: 'idle', provider, error: undefined, animIndex: i } satisfies SegmentNodeData,
     }))
     setNodes([productNode, ...segmentNodes])
     setEdges(segments.map((seg, i) => ({
