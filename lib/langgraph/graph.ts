@@ -2,30 +2,22 @@ import { StateGraph, START, END } from '@langchain/langgraph'
 import { InsightState } from './state'
 import { makeInsightNode } from './nodes'
 import { getLLM, type Provider } from './providers'
-import { PROMPT_CONFIG } from '@/constants/prompt-config'
-import type { ApiKeys, PromptType } from '@/lib/types'
+import type { ApiKeys, DagSpec } from '@/lib/types'
 
-export function buildInsightGraph(provider: Provider, keys: Partial<ApiKeys>) {
+export function buildInsightGraph(provider: Provider, keys: Partial<ApiKeys>, dagSpec: DagSpec) {
+  if (!dagSpec.nodes || dagSpec.nodes.length === 0) {
+    throw new Error('dagSpec must contain at least one node')
+  }
   const llm = getLLM(provider, keys)
   const graph = new StateGraph(InsightState)
 
-  const promptKeys = Object.keys(PROMPT_CONFIG) as PromptType[]
-
-  // Prefix node names to avoid collision with state attribute names
-  promptKeys.forEach((key) => {
-    graph.addNode(`node_${key}`, makeInsightNode(key, llm))
-  })
-
-  // Fan out from START to all nodes in parallel
-  promptKeys.forEach((key) => {
+  dagSpec.nodes.forEach((node) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    graph.addEdge(START, `node_${key}` as any)
-  })
-
-  // Fan in from all nodes to END
-  promptKeys.forEach((key) => {
+    graph.addNode(`node_${node.id}`, makeInsightNode(node, llm))
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    graph.addEdge(`node_${key}` as any, END)
+    graph.addEdge(START, `node_${node.id}` as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    graph.addEdge(`node_${node.id}` as any, END)
   })
 
   return graph.compile()

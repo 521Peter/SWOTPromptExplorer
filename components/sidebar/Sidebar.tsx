@@ -100,7 +100,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
       const res = await fetch('/api/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product: product.trim(), openrouterKey: keys.openrouter }),
+        body: JSON.stringify({ product: product.trim(), provider, keys }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to fetch suggestions. Check your OpenRouter key in Settings.')

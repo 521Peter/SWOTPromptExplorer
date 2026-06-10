@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Settings, X, Check, Eye, EyeOff, Wifi } from 'lucide-react'
+import { Settings, X, Check, Eye, EyeOff, Wifi, Key } from 'lucide-react'
 import { saveKeys, loadKeys, clearKeys, saveProvider } from '@/lib/settings/keys'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
@@ -133,39 +133,73 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
             OpenRouter is active by default. Add a key for any other provider to switch to it.
           </p>
 
-          {/* OpenRouter — env-backed, no key input */}
+          {/* OpenRouter — key input + env fallback */}
           <div
-            className="flex items-center gap-3 rounded-xl px-3 py-3 mb-2"
+            className="flex flex-col rounded-xl mb-2"
             style={{
               border: `1px solid ${provider === 'openrouter' ? '#8B5CF640' : '#1E1E2E'}`,
               background: provider === 'openrouter' ? '#8B5CF608' : 'transparent',
               transition: 'border-color 0.15s, background 0.15s',
             }}
           >
-            <Wifi size={14} style={{ color: openrouterConnected ? '#10B981' : '#5A5A6C', flexShrink: 0 }} />
-            <div className="flex-1 min-w-0">
-              <div style={{ fontWeight: 600, fontSize: 12, color: provider === 'openrouter' ? '#D0D0DC' : '#7A7A8C', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                OpenRouter
+            <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+              <Wifi size={14} style={{ color: openrouterConnected ? '#10B981' : '#5A5A6C', flexShrink: 0 }} />
+              <div className="flex-1 min-w-0">
+                <div style={{ fontWeight: 600, fontSize: 12, color: provider === 'openrouter' ? '#D0D0DC' : '#7A7A8C', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  OpenRouter
+                </div>
+                <div style={{ fontSize: 11, color: openrouterConnected ? '#10B981' : '#5A5A6C', marginTop: 1 }}>
+                  {keys.openrouter ? 'Key saved' : openrouterConnected ? 'Connected via environment' : 'Key not found'}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: openrouterConnected ? '#10B981' : '#5A5A6C', marginTop: 1 }}>
-                {openrouterConnected ? 'Connected via environment' : 'Key not found in env'}
-              </div>
+              <button
+                onClick={() => selectProvider('openrouter')}
+                disabled={!openrouterConnected}
+                className="flex items-center justify-center rounded-full transition-all flex-shrink-0"
+                style={{
+                  width: 18, height: 18,
+                  border: `2px solid ${provider === 'openrouter' ? '#8B5CF6' : (openrouterConnected ? '#3A3A4C' : '#252535')}`,
+                  background: provider === 'openrouter' ? '#8B5CF6' : 'transparent',
+                  cursor: openrouterConnected ? 'pointer' : 'default',
+                  opacity: openrouterConnected ? 1 : 0.3,
+                }}
+              >
+                {provider === 'openrouter' && <span className="inline-block rounded-full" style={{ width: 6, height: 6, background: '#fff' }} />}
+              </button>
             </div>
-            {/* Select radio */}
-            <button
-              onClick={() => selectProvider('openrouter')}
-              disabled={!openrouterConnected}
-              className="flex items-center justify-center rounded-full transition-all flex-shrink-0"
-              style={{
-                width: 18, height: 18,
-                border: `2px solid ${provider === 'openrouter' ? '#8B5CF6' : (openrouterConnected ? '#3A3A4C' : '#252535')}`,
-                background: provider === 'openrouter' ? '#8B5CF6' : 'transparent',
-                cursor: openrouterConnected ? 'pointer' : 'default',
-                opacity: openrouterConnected ? 1 : 0.3,
-              }}
-            >
-              {provider === 'openrouter' && <span className="inline-block rounded-full" style={{ width: 6, height: 6, background: '#fff' }} />}
-            </button>
+            <div className="relative flex items-center px-3 pb-3">
+              <Key size={11} style={{ position: 'absolute', left: 20, color: '#333345', pointerEvents: 'none' }} />
+              <input
+                type={visible['openrouter'] ? 'text' : 'password'}
+                placeholder="sk-or-... (overrides env key)"
+                value={keys.openrouter ?? ''}
+                onChange={(e) => {
+                  setKeys((prev) => ({ ...prev, openrouter: e.target.value }))
+                  setOpenrouterConnected(!!e.target.value || !!process.env.NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY)
+                }}
+                className="w-full pr-9 rounded-lg outline-none placeholder-[#2A2A3C] font-mono"
+                style={{
+                  height: 34,
+                  paddingLeft: 28,
+                  background: '#0A0A12',
+                  border: `1px solid ${keys.openrouter ? '#8B5CF635' : '#1E1E2E'}`,
+                  color: '#C0C0CC',
+                  fontSize: 12,
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = '#8B5CF670')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = keys.openrouter ? '#8B5CF635' : '#1E1E2E')}
+              />
+              <button
+                type="button"
+                onClick={() => toggleVisible('openrouter')}
+                className="absolute right-5 flex items-center justify-center"
+                style={{ color: '#333345', background: 'none', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#8A8A9A')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#333345')}
+              >
+                {visible['openrouter'] ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+            </div>
           </div>
 
           {/* Other providers with key inputs */}

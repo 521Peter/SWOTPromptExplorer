@@ -1,14 +1,18 @@
 # SWOT Prompt Explorer
 
-A visual LLM-powered market analysis tool that runs structured SWOT-style insights across multiple customer segments in parallel. Built with Next.js 14, LangGraph, and ReactFlow.
+An agentic LLM-powered market analysis tool. Enter a product, objective, and customer segments — the app dynamically plans a custom analysis DAG per segment using LangGraph, executes all nodes in parallel, and visualises the results as an interactive, draggable graph.
 
-**Live demo:** [https://swot-prompt-explorer.vercel.app](https://swot-prompt-explorer.vercel.app)
+Built with Next.js 16, LangGraph, and ReactFlow.
 
 ---
 
 ## What it does
 
-Enter a product, an objective, and a set of customer segments. The app fans out 9 parallel LLM analysis nodes per segment using a LangGraph state graph, then visualises the results as an interactive DAG. Click any insight node to read the full analysis in the side panel.
+1. **Plans** a custom DAG — an LLM designs 6–10 tailored analysis nodes for each segment (not a fixed SWOT template)
+2. **Executes** all nodes in parallel using a LangGraph state graph
+3. **Visualises** results as a draggable causal DAG with bezier edges
+4. **Augments** the graph via a resizable chat panel — ask questions, add new nodes inline
+5. **Compares** the same segment across different LLM providers side-by-side
 
 ---
 
@@ -24,7 +28,7 @@ npm install
 
 ### 2. Set up API keys (optional)
 
-You can provide default keys via environment variables so the app works without the Settings panel:
+Provide default keys via environment variables so the app works without the Settings panel:
 
 ```bash
 # .env.local
@@ -34,7 +38,7 @@ NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY=sk-ant-...
 NEXT_PUBLIC_DEFAULT_GROQ_KEY=gsk_...
 ```
 
-Keys can also be entered at runtime via the **Settings** (⚙) panel — they are stored in `localStorage` and take precedence over env vars.
+Keys can also be entered at runtime via the **Settings** (⚙) panel. They are stored in `sessionStorage` (cleared when the tab closes, never written to disk) and take precedence over env vars.
 
 ### 3. Run the dev server
 
@@ -56,78 +60,78 @@ Open [http://localhost:3000](http://localhost:3000).
 | **Objective** | The business goal driving the analysis (e.g. `Increase brand awareness`) |
 | **Segments** | Up to 6 customer groups to analyse in parallel (e.g. `Gen Z consumers`, `Enterprise teams`) |
 
-Use the **✨ Suggest** button (appears after typing a product name) to generate AI-powered objective and segment suggestions using a lightweight OpenRouter model.
+Use the **✨ Suggest** button after typing a product name to generate AI-powered objective and segment ideas using your active provider.
 
 ### Step 2 — Choose a provider
 
 Open **Settings** (⚙ top-right of the sidebar) to select your LLM provider and paste your API key:
 
-- **OpenRouter** — access hundreds of models; configure the model in Settings
-- **OpenAI** — uses `gpt-4o-mini`
-- **Claude** — uses `claude-haiku-4-5`
-- **Groq** — uses `llama-3.3-70b-versatile`
+| Provider | Model |
+|---|---|
+| **OpenRouter** | Configurable — GPT-4o, Llama 3.3, Gemini Flash, Mistral, DeepSeek, and more |
+| **OpenAI** | `gpt-4o-mini` |
+| **Claude** | `claude-haiku-4-5` |
+| **Groq** | `llama-3.3-70b-versatile` |
 
 ### Step 3 — Run analysis
 
-Click **Run analysis**. The app validates your inputs with a lightweight LLM check, then fans out all segment analyses in parallel. Each segment node on the graph updates in real time:
+Click **Run analysis**. The app:
+1. Validates inputs with a lightweight LLM check
+2. Calls `/api/plan` — an LLM designs a custom DAG for each segment
+3. Renders the DAG skeleton immediately (nodes visible before content arrives)
+4. Calls `/api/insights` — all nodes execute in parallel via LangGraph
+5. Fills in content node-by-node as responses arrive
 
-- **Idle** — waiting to start
-- **Analysing** (spinner) — LLM running
+Segment node statuses:
+- **Idle** — not yet started
+- **Planning** (purple spinner) — LLM designing the DAG
+- **Analysing** (amber spinner) — LLM running insight nodes
 - **Ready** (green) — click to explore
 
 ### Step 4 — Explore insights
 
-Click any **Ready** segment node to enter the Insight DAG view. Nine insight nodes are laid out as a causal graph. Click any node to read its full analysis in the panel on the right. The panel renders markdown including bullet points, headings, and tables.
+Click any **Ready** segment node to enter the Insight DAG view:
 
-Use the **Back** button or press `Escape` to return to the segment overview.
+- **Click any insight node** to read the full analysis in the side panel (markdown with tables, bullet points, headings)
+- **Drag nodes** freely — positions are preserved across session updates
+- **Stale nodes** (amber ⚠) — shown when inputs changed after a run; click to re-run just that node
+- Press `Escape` or click **Back** to return to the segment overview
+
+### Step 5 — Refine with chat
+
+Once analysis is ready, a **chat panel** appears below the DAG canvas (resizable — drag the handle between them).
+
+- Ask any question about the segment
+- The LLM always replies with an answer **and** suggests a new graph node capturing the insight
+- Click **Add to graph ↗** to append the node below the existing layout and run it immediately
+
+### Step 6 — Compare providers
+
+Run the same segment with a second provider (switch in Settings, click Run again). A **Compare providers** button appears in the DAG toolbar — click it to open a side-by-side panel showing the same node's content from both providers.
 
 ---
 
-## LangGraph Architecture
+## Agentic Architecture
 
-Each segment runs its own compiled LangGraph state graph. The graph fans out from `START` to all 9 insight nodes **in parallel**, then fans back in to `END`.
+### Two-phase plan → execute flow
 
 ```
-START
-  ├─▶ node_strengths
-  ├─▶ node_weaknesses
-  ├─▶ node_opportunities
-  ├─▶ node_threats
-  ├─▶ node_marketPositioning
-  ├─▶ node_buyerPersona
-  ├─▶ node_investmentOpportunities
-  ├─▶ node_channelsDistribution
-  └─▶ node_marketingOKRs
-          └─▶ END (all nodes fan in)
+User clicks Run
+  │
+  ├─▶ POST /api/plan   (LLM designs DAG: 6–10 nodes, edges, labels, icons)
+  │     └─▶ DagSpec { nodes[], edges[] } stored in session
+  │
+  └─▶ POST /api/insights  (LangGraph executes all nodes in parallel)
+        ├─▶ node_<id_1>  ──▶ outputs[id_1]
+        ├─▶ node_<id_2>  ──▶ outputs[id_2]
+        │   ...
+        └─▶ node_<id_n>  ──▶ outputs[id_n]
+                              └─▶ END
 ```
 
-### Insight Nodes
+The DAG structure is **generated at runtime** — the LLM chooses which analysis lenses are most relevant to the specific product, objective, and segment. No two runs produce the same graph.
 
-| Node | Colour | What it generates |
-|---|---|---|
-| **Strengths** | Green | Product strengths most relevant to the segment |
-| **Weaknesses** | Red | Honest product weaknesses for the segment |
-| **Opportunities** | Blue | Untapped demand and emerging market trends |
-| **Threats** | Amber | Competitive, regulatory, and behavioural risks |
-| **Market Positioning** | Cyan | Positioning statement and differentiation angle |
-| **Buyer Persona** | Pink | Demographics, motivations, pain points, buying triggers |
-| **Investment Opportunities** | Lime | ROI potential and strategic resource-allocation priorities |
-| **Channels & Distribution** | Orange | Digital, physical, and partnership reach channels |
-| **Marketing OKRs** | Purple | 3 measurable, time-bound OKRs for the segment |
-
-### Causal edges (visualised in the DAG)
-
-The DAG renders directional causal relationships between nodes to show how insights inform each other:
-
-| Source | → | Target | Label |
-|---|---|---|---|
-| Opportunities | → | Marketing OKRs | *informs* |
-| Channels & Distribution | → | Marketing OKRs | *activates* |
-| Strengths | → | Investment Opportunities | *enables* |
-| Threats | → | Weaknesses | *amplifies* |
-| Buyer Persona | → | Market Positioning | *shapes* |
-
-### State schema
+### LangGraph state schema
 
 ```ts
 // lib/langgraph/state.ts
@@ -135,18 +139,28 @@ The DAG renders directional causal relationships between nodes to show how insig
   product: string
   objective: string
   segment: string
-  provider: Provider
-  strengths: string
-  weaknesses: string
-  opportunities: string
-  threats: string
-  marketPositioning: string
-  buyerPersona: string
-  investmentOpportunities: string
-  channelsDistribution: string
-  marketingOKRs: string
+  provider: string
+  dagSpec: DagSpec | null
+  outputs: Record<string, string>   // keyed by dynamic node IDs
 }
 ```
+
+### Chat-driven augmentation
+
+```
+User sends message
+  │
+  └─▶ POST /api/chat
+        ├─▶ plain-text reply
+        └─▶ additions: { nodes[], edges[] }   // new node to append
+              └─▶ User clicks "Add to graph"
+                    └─▶ POST /api/insights (single-node DagSpec)
+                          └─▶ New node content merged into session
+```
+
+### Stale node detection
+
+When `product`, `objective`, or `segment` changes after a session is `ready`, all node IDs are marked stale (amber ⚠ badge). Clicking a stale node re-runs only that node via a single-node `DagSpec`, without touching the rest of the session.
 
 ---
 
@@ -154,42 +168,47 @@ The DAG renders directional causal relationships between nodes to show how insig
 
 ```
 app/
-  page.tsx                  # Root layout + view switching
+  page.tsx                  # Root layout, view switching, state wiring
   api/
-    insights/route.ts       # Runs the LangGraph for one segment
-    suggest/route.ts        # Lightweight objective + segment suggestions
-    validate/route.ts       # LLM-powered input validation gate
+    plan/route.ts           # LLM plans a custom DagSpec
+    insights/route.ts       # Runs LangGraph for one segment (full or single node)
+    chat/route.ts           # Chat reply + suggested node additions
+    suggest/route.ts        # AI-powered objective + segment suggestions
+    validate/route.ts       # LLM input validation gate
 
 components/
   sidebar/
     Sidebar.tsx             # Product / objective / segment form + suggestions
-    SettingsPanel.tsx       # Provider + API key management
+    SettingsPanel.tsx       # Provider + API key management (sessionStorage)
   graphs/
-    SegmentGraph.tsx        # Hub-and-spoke overview (product → segments)
-    InsightDAG.tsx          # Per-segment causal DAG
-    ProductNode.tsx         # Root product node (ReactFlow)
-    SegmentNode.tsx         # Segment status node (ReactFlow)
-    InsightNode.tsx         # Insight content node (ReactFlow)
+    SegmentGraph.tsx        # Hub-and-spoke overview (product → segments), draggable
+    InsightDAG.tsx          # Per-segment causal DAG with resizable chat panel
+    ProductNode.tsx         # Root product node
+    SegmentNode.tsx         # Segment status node (idle/planning/loading/ready/error)
+    InsightNode.tsx         # Insight content node (stale badge, loading pulse)
   panels/
-    InsightPanel.tsx        # Markdown side panel for insight content
+    InsightPanel.tsx        # Markdown side panel for selected node
+    DagChatPanel.tsx        # Resizable chat panel docked below DAG
+    ComparePanel.tsx        # Side-by-side provider comparison panel
 
 lib/
   langgraph/
-    graph.ts                # Builds + compiles the LangGraph state graph
-    nodes.ts                # makeInsightNode factory — one per prompt type
+    graph.ts                # Dynamic LangGraph builder from DagSpec
+    nodes.ts                # makeInsightNode factory
     providers.ts            # LLM factory (OpenAI / Claude / Groq / OpenRouter)
-    state.ts                # LangGraph state schema (Annotation)
-  graph-utils.ts            # ReactFlow layout helpers + dagre auto-layout
-  validate.ts               # Client-side gibberish detection heuristics
-  tokens.ts                 # Design tokens (colours, provider palette)
+    state.ts                # LangGraph state with dynamic outputs map
+  graph-utils.ts            # ReactFlow layout (dagre) + buildInsightElements
+  icon-map.ts               # LLM icon name → LucideIcon component map
+  tokens.ts                 # Design tokens (colours, provider palette, edge colours)
+  settings/keys.ts          # sessionStorage key management + env var fallback
+  types.ts                  # DagSpec, DagNode, DagEdge, ChatMessage, SegmentSession
 
 constants/
-  prompt-config.ts          # All 9 prompts, labels, colours, icons, causal edges
   openrouter-models.ts      # Valid OpenRouter model IDs
 
 hooks/
-  useInsights.ts            # Session state, API orchestration, tick counter
-  useGraphState.ts          # Active layer / segment / node navigation state
+  useInsights.ts            # Session state, plan/run/chat/augment/rerun orchestration
+  useGraphState.ts          # Active layer / segment / node navigation
 ```
 
 ---
@@ -198,7 +217,7 @@ hooks/
 
 | Layer | Library |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router, Turbopack) |
 | LLM orchestration | LangGraph (`@langchain/langgraph`) |
 | LLM providers | LangChain (OpenAI, Anthropic, Groq) + OpenRouter |
 | Graph visualisation | ReactFlow (`@xyflow/react`) |
@@ -207,3 +226,17 @@ hooks/
 | Resizable panels | react-resizable-panels v2 |
 | Markdown rendering | react-markdown + remark-gfm |
 | Styling | Tailwind CSS |
+
+---
+
+## Key Design Decisions
+
+**Dynamic DAG over fixed SWOT** — The planning LLM is explicitly instructed not to default to a generic SWOT structure. It picks analysis lenses based on the specific product and segment, producing more relevant and varied graphs.
+
+**sessionStorage for API keys** — Keys are never written to localStorage or disk. They live only in sessionStorage (cleared on tab close), layered over optional environment variable defaults.
+
+**Position-preserving session updates** — ReactFlow node positions are set once (from dagre layout) and never overwritten by session state changes. `useNodesState`/`useEdgesState` own positions; `session` tick updates patch only `data` fields.
+
+**Single-node re-run** — Stale nodes reuse the same `/api/insights` endpoint with a one-node `DagSpec`. No separate endpoint needed.
+
+**Non-destructive augmentation** — Chat-added nodes are merged into the existing `DagSpec` by ID (no duplicates), positioned below the current layout's max-y, and executed in isolation without touching existing content.

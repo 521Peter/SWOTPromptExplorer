@@ -1,15 +1,17 @@
 'use client'
 
 import { memo } from 'react'
+import { motion } from 'framer-motion'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { tokens } from '@/lib/tokens'
 import type { Provider } from '@/lib/langgraph/providers'
 
 export interface SegmentNodeData {
   label: string
-  status: 'idle' | 'loading' | 'ready' | 'error'
+  status: 'idle' | 'planning' | 'loading' | 'ready' | 'error'
   provider: Provider
   error?: string
+  animIndex?: number
   [key: string]: unknown
 }
 
@@ -18,26 +20,34 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
   const providerColor = tokens.providers[d.provider as keyof typeof tokens.providers] ?? '#7A7A8C'
 
   const borderColor =
-    d.status === 'ready'   ? providerColor :
-    d.status === 'loading' ? providerColor :
-    d.status === 'error'   ? '#EF4444' :
+    d.status === 'ready'    ? providerColor :
+    d.status === 'loading'  ? providerColor :
+    d.status === 'planning' ? '#8B5CF6' :
+    d.status === 'error'    ? '#EF4444' :
     '#262633'
 
   const borderWidth = d.status === 'idle' ? 0.5 : 1.5
 
   const statusText =
-    d.status === 'ready'   ? 'Ready' :
-    d.status === 'loading' ? 'Analyzing' :
-    d.status === 'error'   ? 'Error' :
+    d.status === 'ready'    ? 'Ready' :
+    d.status === 'loading'  ? 'Analyzing' :
+    d.status === 'planning' ? 'Planning' :
+    d.status === 'error'    ? 'Error' :
     'Idle'
 
   const statusColor =
-    d.status === 'ready'   ? '#10B981' :
-    d.status === 'loading' ? '#F59E0B' :
-    d.status === 'error'   ? '#EF4444' :
+    d.status === 'ready'    ? '#10B981' :
+    d.status === 'loading'  ? '#F59E0B' :
+    d.status === 'planning' ? '#8B5CF6' :
+    d.status === 'error'    ? '#EF4444' :
     '#5A5A6C'
 
   return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.32, delay: (d.animIndex ?? 0) * 0.07, ease: 'easeOut' }}
+    >
     <div
       style={{
         minWidth: 160,
@@ -52,12 +62,14 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         gap: 8,
         boxShadow:
           d.status === 'ready'
-            ? `0 0 0 4px ${providerColor}10`
+            ? `0 0 12px 0 ${providerColor}20, 0 0 0 4px ${providerColor}10`
             : selected
             ? '0 0 0 2px #534AB7'
             : 'none',
+        opacity: d.status === 'idle' ? 0.65 : 1,
         cursor: d.status === 'ready' ? 'pointer' : 'default',
         position: 'relative',
+        transition: 'border-color 0.25s ease, box-shadow 0.3s ease, opacity 0.3s ease',
       }}
     >
       {/* Row 1: label */}
@@ -86,7 +98,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
 
       {/* Row 2: status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {d.status === 'loading' && (
+        {(d.status === 'loading' || d.status === 'planning') && (
           <span
             className="animate-spin"
             style={{
@@ -108,6 +120,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
     </div>
+    </motion.div>
   )
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
 import {
@@ -15,8 +15,9 @@ import { InsightDAG } from "@/components/graphs/InsightDAG";
 import { InsightPanel } from "@/components/panels/InsightPanel";
 import { useInsights } from "@/hooks/useInsights";
 import { useGraphState } from "@/hooks/useGraphState";
+import { ComparePanel } from "@/components/panels/ComparePanel";
 import type { Provider } from "@/lib/langgraph/providers";
-import type { ApiKeys, PromptType } from "@/lib/types";
+import type { ApiKeys } from "@/lib/types";
 
 export default function Home() {
   const [segments, setSegments] = useState<string[]>([]);
@@ -25,7 +26,9 @@ export default function Home() {
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(
     new Set(),
   );
-  const { getSession, runAll, tick } = useInsights();
+  const [isComparing, setIsComparing] = useState(false);
+  const lastRunConfig = useRef<{ keys: Partial<ApiKeys>; openrouterModel: string } | null>(null);
+  const { getSession, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, getProvidersWithResults, tick } = useInsights();
   const { state, selectSegment, selectNode, backToSegments, setProvider } =
     useGraphState();
 
@@ -34,6 +37,7 @@ export default function Home() {
   }
 
   function handleRun(config: {
+
     product: string;
     objective: string;
     segments: string[];
@@ -47,12 +51,28 @@ export default function Home() {
     setObjective(config.objective);
     setProvider(config.provider);
     setDismissedErrors(new Set());
+    setIsComparing(false);
+    lastRunConfig.current = { keys: config.keys, openrouterModel: config.openrouterModel };
     runAll(config.segments, { ...config, force: config.force });
   }
 
-  const isRunning = segments.some(
-    (seg) => getSession(seg, state.provider).status === "loading",
-  );
+  // Mark sessions stale when inputs change after they were run
+  useEffect(() => {
+    segments.forEach((seg) => {
+      const s = getSession(seg, state.provider)
+      if (s.status !== 'ready' || !s.inputSnapshot) return
+      const snap = s.inputSnapshot
+      if (snap.product !== product || snap.objective !== objective || snap.segment !== seg) {
+        markStale(seg, state.provider)
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product, objective, segments.join(','), state.provider])
+
+  const isRunning = segments.some((seg) => {
+    const s = getSession(seg, state.provider).status
+    return s === 'planning' || s === 'loading'
+  });
 
   const activeSession = state.activeSegment
     ? getSession(state.activeSegment, state.provider)
@@ -211,8 +231,37 @@ export default function Home() {
                       segment={state.activeSegment}
                       provider={state.provider}
                       session={activeSession}
+                      dagSpec={activeSession.dagSpec}
                       selectedNode={state.selectedNode}
-                      onNodeClick={(key: PromptType) => selectNode(key)}
+                      availableProviders={getProvidersWithResults(state.activeSegment)}
+                      onCompare={() => setIsComparing(true)}
+                      onNodeClick={(nodeId: string) => selectNode(nodeId)}
+                      onRerunNode={(nodeId: string) =>
+                        rerunNode(state.activeSegment!, state.provider, nodeId, {
+                          product, objective,
+                          provider: state.provider,
+                          keys: lastRunConfig.current?.keys ?? {},
+                          openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                        })
+                      }
+                      keys={lastRunConfig.current?.keys ?? {}}
+                      onChatSend={(userText, assistantMsg) => {
+                        const seg = state.activeSegment!
+                        const prov = state.provider
+                        appendChat(seg, prov, { role: 'user', content: userText })
+                        appendChat(seg, prov, assistantMsg)
+                      }}
+                      onChatAddNode={(msgIndex, additions) => {
+                        const seg = state.activeSegment!
+                        const prov = state.provider
+                        markChatNodeAdded(seg, prov, msgIndex)
+                        augmentDag(seg, prov, additions, {
+                          product, objective,
+                          provider: prov,
+                          keys: lastRunConfig.current?.keys ?? {},
+                          openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                        })
+                      }}
                       onBack={backToSegments}
                     />
                   </ResizablePanel>
@@ -223,17 +272,28 @@ export default function Home() {
                   />
 
                   <ResizablePanel defaultSize={28} minSize={15} maxSize={55}>
-                    <InsightPanel
-                      promptKey={state.selectedNode as PromptType | null}
-                      content={
-                        state.selectedNode && activeSession.insights
-                          ? activeSession.insights[
-                              state.selectedNode as PromptType
-                            ]
-                          : null
-                      }
-                      onClose={() => selectNode(null)}
-                    />
+                    {isComparing && activeSession.dagSpec ? (
+                      <ComparePanel
+                        segment={state.activeSegment}
+                        primaryProvider={state.provider}
+                        availableProviders={getProvidersWithResults(state.activeSegment)}
+                        getSession={getSession}
+                        dagSpec={activeSession.dagSpec}
+                        selectedNode={state.selectedNode}
+                        onClose={() => setIsComparing(false)}
+                      />
+                    ) : (
+                      <InsightPanel
+                        promptKey={state.selectedNode}
+                        dagSpec={activeSession.dagSpec}
+                        content={
+                          state.selectedNode && activeSession.insights
+                            ? activeSession.insights[state.selectedNode]
+                            : null
+                        }
+                        onClose={() => selectNode(null)}
+                      />
+                    )}
                   </ResizablePanel>
                 </ResizablePanelGroup>
               </motion.div>

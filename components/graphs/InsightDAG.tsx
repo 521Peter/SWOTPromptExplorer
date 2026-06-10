@@ -1,23 +1,29 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
 import {
   ReactFlow,
   Background,
   Controls,
   BackgroundVariant,
+  MarkerType,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
   type NodeMouseHandler,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sparkles, GitCompare } from 'lucide-react'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
+import { DagChatPanel } from '@/components/panels/DagChatPanel'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { ProductNode } from './ProductNode'
 import { SegmentNode, type SegmentNodeData } from './SegmentNode'
 import { buildInsightElements, getLayoutedInsightElements } from '@/lib/graph-utils'
 import type { Provider } from '@/lib/langgraph/providers'
-import type { PromptType, SegmentSession } from '@/lib/types'
+import type { ChatMessage, DagSpec, SegmentSession } from '@/lib/types'
+import type { ApiKeys } from '@/lib/types'
 
 const PRODUCT_ID = '__dag_product__'
 const SEGMENT_ID = '__dag_segment__'
@@ -34,145 +40,223 @@ interface Props {
   segment: string
   provider: Provider
   session: SegmentSession
+  dagSpec: DagSpec | null
   selectedNode: string | null
-  onNodeClick: (promptKey: PromptType) => void
+  onNodeClick: (nodeId: string) => void
+  onRerunNode?: (nodeId: string) => void
   onBack: () => void
+  keys?: Partial<ApiKeys>
+  onChatSend?: (userMsg: string, assistantMsg: ChatMessage) => void
+  onChatAddNode?: (msgIndex: number, additions: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
+  availableProviders?: Provider[]
+  onCompare?: () => void
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, selectedNode, onNodeClick, onBack }: Props) {
-  const { nodes: baseInsightNodes, edges: insightEdges } = useMemo(
-    () => buildInsightElements(segment),
-    [segment]
-  )
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatSend, onChatAddNode, availableProviders = [], onCompare }: Props) {
 
-  // Merge live session status into insight nodes
-  const insightNodes: Node[] = useMemo(
-    () =>
-      baseInsightNodes.map((n) => {
-        const promptKey = (n.data as InsightNodeData).promptKey
-        const content = session.insights?.[promptKey] ?? null
-        const status = session.status === 'ready' ? 'ready'
-          : session.status === 'loading' ? 'loading'
-          : session.status === 'error' ? 'error'
-          : 'idle'
-        return {
-          ...n,
-          selected: selectedNode === promptKey,
-          data: { ...n.data, status, content } as InsightNodeData,
-        }
-      }),
-    [baseInsightNodes, session, selectedNode]
-  )
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges] = useEdgesState<Edge>([])
 
-  // Build full node + edge list including product and segment header nodes
-  const { allNodes, allEdges } = useMemo(() => {
+  // Rebuild layout only when dagSpec changes (preserves drag positions across session updates)
+  useEffect(() => {
+    if (!dagSpec) { setNodes([]); setEdges([]); return }
+
+    const { nodes: insightNodes, edges: insightEdges } = buildInsightElements(segment, dagSpec)
+
     const productNode: Node = {
-      id: PRODUCT_ID,
-      type: 'productNode',
-      position: { x: 0, y: 0 },
-      data: { label: product || 'Product', objective },
-      selectable: false,
+      id: PRODUCT_ID, type: 'productNode', position: { x: 0, y: 0 },
+      data: { label: product || 'Product', objective }, selectable: false,
     }
-
-    const segmentStatus = session.status === 'loading' ? 'loading'
-      : session.status === 'ready' ? 'ready'
-      : session.status === 'error' ? 'error'
-      : 'idle'
-
     const segmentNode: Node = {
-      id: SEGMENT_ID,
-      type: 'segmentNode',
-      position: { x: 0, y: 0 },
-      data: { label: segment, status: segmentStatus, provider } satisfies SegmentNodeData,
-      selectable: false,
+      id: SEGMENT_ID, type: 'segmentNode', position: { x: 0, y: 0 },
+      data: { label: segment, status: 'idle', provider } satisfies SegmentNodeData, selectable: false,
     }
-
     const topEdges: Edge[] = [
       {
-        id: '__prod-seg__',
-        source: PRODUCT_ID,
-        target: SEGMENT_ID,
-        type: 'straight',
+        id: '__prod-seg__', source: PRODUCT_ID, target: SEGMENT_ID, type: 'default',
+        animated: false,
         style: { stroke: '#6B62D1', strokeDasharray: '5 4', strokeWidth: 1.5 },
-      },
-      // Segment connects to ALL insight nodes
+        markerEnd: { type: MarkerType.ArrowClosed, width: 11, height: 11, color: '#6B62D1' },
+      } as Edge,
       ...insightNodes.map((n) => ({
-        id: `__seg-${n.id}__`,
-        source: SEGMENT_ID,
-        target: n.id,
-        type: 'straight',
-        style: { stroke: '#5A5A7A', strokeDasharray: '5 4', strokeWidth: 1.5 },
-      })),
+        id: `__seg-${n.id}__`, source: SEGMENT_ID, target: n.id, type: 'default' as const,
+        animated: false,
+        style: { stroke: '#5A5A7A', strokeDasharray: '5 4', strokeWidth: 1.2 },
+      } as Edge)),
     ]
 
-    // Re-layout everything together so dagre ranks the header nodes above insight nodes
-    const allRaw: Node[] = [productNode, segmentNode, ...insightNodes]
-    // Use only topEdges for dagre layout (insight-to-insight edges handled separately for layout)
-    const allEdgesRaw: Edge[] = [...topEdges, ...insightEdges]
-    const laid = getLayoutedInsightElements(allRaw, allEdgesRaw)
+    const allRaw = [productNode, segmentNode, ...insightNodes]
+    const allEdgesRaw = [...topEdges, ...insightEdges]
+    setNodes(getLayoutedInsightElements(allRaw, allEdgesRaw))
+    setEdges(allEdgesRaw)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dagSpec, segment])
 
-    return { allNodes: laid, allEdges: allEdgesRaw }
-  }, [product, objective, segment, provider, session.status, insightNodes, insightEdges])
+  // Update only data fields when session changes — never touch positions
+  useEffect(() => {
+    const segmentStatus =
+      session.status === 'planning' ? 'planning' :
+      session.status === 'loading'  ? 'loading' :
+      session.status === 'ready'    ? 'ready' :
+      session.status === 'error'    ? 'error' : 'idle'
 
-  const styledEdges: Edge[] = useMemo(
-    () =>
-      allEdges.map((e) => ({
-        ...e,
-        labelStyle: { fill: '#7A7A8C', fontSize: 10 },
-        labelBgStyle: { fill: '#0A0A0F', padding: 2 },
-      })),
-    [allEdges]
-  )
+    setNodes((prev) =>
+      prev.map((n) => {
+        if (n.id === SEGMENT_ID) {
+          return { ...n, data: { ...n.data, status: segmentStatus } }
+        }
+        if (n.id === PRODUCT_ID) return n
+        const promptKey = (n.data as InsightNodeData).promptKey as string
+        const content = session.insights?.[promptKey] ?? null
+        const stale = session.staleNodeIds.has(promptKey)
+        const nodeStatus =
+          session.status === 'ready'   ? 'ready' :
+          session.status === 'loading' ? 'loading' :
+          session.status === 'error'   ? 'error' : 'idle'
+        return { ...n, data: { ...n.data, status: nodeStatus, content, stale } }
+      })
+    )
+
+    const isLoading = session.status === 'loading' || session.status === 'planning'
+    setEdges((prev) =>
+      prev.map((e) => {
+        if (e.id === '__prod-seg__') return { ...e, animated: isLoading }
+        if (e.id.startsWith('__seg-')) return { ...e, animated: isLoading }
+        return e
+      })
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
+
+  // Update selected state without touching positions
+  useEffect(() => {
+    setNodes((prev) =>
+      prev.map((n) => {
+        if (n.id === PRODUCT_ID || n.id === SEGMENT_ID) return n
+        const promptKey = (n.data as InsightNodeData).promptKey as string
+        return { ...n, selected: selectedNode === promptKey }
+      })
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode])
 
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
       if (node.id === PRODUCT_ID || node.id === SEGMENT_ID) return
-      const promptKey = (node.data as InsightNodeData).promptKey
-      if (session.status === 'ready') onNodeClick(promptKey)
+      const nodeId = (node.data as InsightNodeData).promptKey as string
+      const stale = (node.data as InsightNodeData).stale
+      if (stale && onRerunNode) {
+        onRerunNode(nodeId)
+      } else if (session.status === 'ready') {
+        onNodeClick(nodeId)
+      }
     },
-    [session.status, onNodeClick]
+    [session.status, onNodeClick, onRerunNode]
   )
 
-  return (
-    <div className="h-full relative" style={{ background: '#0A0A0F' }}>
-      {/* Back button */}
-      <button
-        onClick={onBack}
-        className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        style={{
-          background: 'rgba(19,19,26,0.85)',
-          border: '0.5px solid #1E1E2E',
-          color: '#7A7A8C',
-          backdropFilter: 'blur(8px)',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#E6E6EC')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#7A7A8C')}
-      >
-        <ArrowLeft size={12} />
-        Back
-      </button>
+  const showChat = session.status === 'ready' && dagSpec && onChatSend && onChatAddNode
 
-      <ReactFlow
-        nodes={allNodes}
-        edges={styledEdges}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable
-        proOptions={{ hideAttribution: true }}
-        style={{ background: '#0A0A0F' }}
-      >
-        <Background
-          variant={BackgroundVariant.Dots}
-          color="rgba(255,255,255,0.1)"
-          gap={28}
-          size={1.2}
-        />
-        <Controls />
-      </ReactFlow>
+  return (
+    <div className="h-full flex flex-col" style={{ background: '#0A0A0F' }}>
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          style={{
+            background: 'rgba(19,19,26,0.85)',
+            border: '0.5px solid #1E1E2E',
+            color: '#7A7A8C',
+            backdropFilter: 'blur(8px)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#E6E6EC')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#7A7A8C')}
+        >
+          <ArrowLeft size={12} />
+          Back
+        </button>
+
+        {availableProviders.length > 1 && onCompare && (
+          <button
+            onClick={onCompare}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            style={{
+              background: 'rgba(83,74,183,0.15)',
+              border: '0.5px solid #534AB7',
+              color: '#9D94F0',
+              backdropFilter: 'blur(8px)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#C4BFFF')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#9D94F0')}
+          >
+            <GitCompare size={12} />
+            Compare providers
+          </button>
+        )}
+      </div>
+
+      {/* Planning overlay — shown while /api/plan is in flight */}
+      {session.status === 'planning' && (
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3"
+          style={{ background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(4px)' }}
+        >
+          <Sparkles size={20} style={{ color: '#8B5CF6' }} className="animate-pulse" />
+          <p style={{ color: '#C4B5FD', fontSize: 13, fontWeight: 500 }}>Planning analysis&hellip;</p>
+          <p style={{ color: '#5A5A6C', fontSize: 11 }}>The LLM is designing a custom DAG for this segment</p>
+        </div>
+      )}
+
+      <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
+        <ResizablePanel defaultSize={showChat ? 70 : 100} minSize={30}>
+          <div className="h-full relative">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              nodeTypes={nodeTypes}
+              onNodeClick={handleNodeClick}
+              fitView
+              fitViewOptions={{ padding: 0.2 }}
+              nodesDraggable
+              nodesConnectable={false}
+              elementsSelectable
+              proOptions={{ hideAttribution: true }}
+              defaultEdgeOptions={{ type: 'default' }}
+              style={{ background: '#0A0A0F' }}
+            >
+              <Background
+                variant={BackgroundVariant.Dots}
+                color="rgba(255,255,255,0.1)"
+                gap={28}
+                size={1.2}
+              />
+              <Controls />
+            </ReactFlow>
+          </div>
+        </ResizablePanel>
+
+        {showChat && (
+          <>
+            <ResizableHandle
+              withHandle
+              className="h-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
+            />
+            <ResizablePanel defaultSize={30} minSize={15} maxSize={60}>
+              <DagChatPanel
+                segment={segment}
+                provider={provider}
+                dagSpec={dagSpec!}
+                history={session.chat}
+                keys={keys}
+                product={product}
+                objective={objective}
+                onSend={onChatSend!}
+                onAddNode={onChatAddNode!}
+              />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
   )
 }

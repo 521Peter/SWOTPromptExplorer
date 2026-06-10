@@ -29,13 +29,13 @@ export function saveProvider(p: Provider): void {
 
 export function saveKeys(keys: Partial<ApiKeys>): void {
   if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(keys))
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(keys))
 }
 
 export function loadKeys(): Partial<ApiKeys> {
   if (typeof window === 'undefined') return envDefaults()
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Partial<ApiKeys>
+    const stored = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}') as Partial<ApiKeys>
     // Merge: stored keys take precedence over env defaults
     const defaults = envDefaults()
     return {
@@ -55,5 +55,5 @@ export function loadKeys(): Partial<ApiKeys> {
 
 export function clearKeys(): void {
   if (typeof window === 'undefined') return
-  localStorage.removeItem(STORAGE_KEY)
+  sessionStorage.removeItem(STORAGE_KEY)
 }

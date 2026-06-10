@@ -4,17 +4,17 @@ import { useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-
-import { PROMPT_CONFIG } from '@/constants/prompt-config'
-import type { PromptType } from '@/lib/types'
+import { resolveIcon } from '@/lib/icon-map'
+import type { DagSpec } from '@/lib/types'
 
 interface Props {
-  promptKey: PromptType | null
+  promptKey: string | null
+  dagSpec: DagSpec | null
   content: string | null
   onClose: () => void
 }
 
-export function InsightPanel({ promptKey, content, onClose }: Props) {
+export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
   const handleKey = useCallback(
     (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() },
     [onClose]
@@ -25,8 +25,11 @@ export function InsightPanel({ promptKey, content, onClose }: Props) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [handleKey])
 
-  const config = promptKey ? PROMPT_CONFIG[promptKey] : null
-  const Icon = config?.icon ?? null
+  const nodeMeta = promptKey && dagSpec
+    ? dagSpec.nodes.find((n) => n.id === promptKey) ?? null
+    : null
+
+  const Icon = nodeMeta ? resolveIcon(nodeMeta.iconName) : null
 
   return (
     <div
@@ -50,13 +53,13 @@ export function InsightPanel({ promptKey, content, onClose }: Props) {
           flexShrink: 0,
         }}
       >
-        {Icon && config && (
-          <span style={{ color: config.color, flexShrink: 0 }}>
+        {Icon && nodeMeta && (
+          <span style={{ color: nodeMeta.color, flexShrink: 0 }}>
             <Icon size={18} />
           </span>
         )}
         <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#E6E6EC', letterSpacing: -0.2 }}>
-          {config?.label ?? 'Select a node'}
+          {nodeMeta?.label ?? 'Select a node'}
         </span>
         {promptKey && (
           <button
