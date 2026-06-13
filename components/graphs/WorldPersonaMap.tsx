@@ -129,10 +129,6 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: markerScale, opacity: 1 }}
                   transition={{ delay: i * 0.06, duration: 0.38, type: 'spring', stiffness: 220, damping: 18 }}
-                  onMouseEnter={() => setHovered(region.id)}
-                  onMouseLeave={() => setHovered(null)}
-                  onClick={() => { if (region.status === 'ready') zoomToRegion(region) }}
-                  style={{ cursor: region.status === 'ready' ? 'pointer' : 'default' }}
                 >
                   {isLoad ? (
                     <>
@@ -178,7 +174,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
                         </text>
                       )}
                       {isHov && !isSel && (
-                        <g transform={`translate(0, ${-r - 18})`}>
+                        <g transform={`translate(0, ${-r - 18})`} style={{ pointerEvents: 'none' }}>
                           <rect x={-62} y={-12} width={124} height={19} rx={3} fill="#13131A" stroke={region.color} strokeWidth={0.7} strokeOpacity={0.5} />
                           <text textAnchor="middle" dominantBaseline="central"
                             style={{ fill: '#AAA', fontSize: 8, fontFamily: 'var(--font-mono)', pointerEvents: 'none' }}
@@ -189,6 +185,16 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
                       )}
                     </>
                   )}
+                  {/* Stable hit area — keeps hover events regardless of tooltip appearing */}
+                  <circle
+                    cx={0} cy={0}
+                    r={isLoad ? MIN_R + 4 : r + 6}
+                    fill="transparent"
+                    style={{ cursor: region.status === 'ready' ? 'pointer' : 'default' }}
+                    onMouseEnter={() => setHovered(region.id)}
+                    onMouseLeave={() => setHovered(null)}
+                    onClick={() => { if (region.status === 'ready') zoomToRegion(region) }}
+                  />
                 </motion.g>
               </Marker>
             )
