@@ -293,7 +293,7 @@ export function DagChatPanel({
             borderRadius: 7,
             padding: '6px 10px',
             fontSize: 12,
-            color: '#C4C4D4',
+            color: '#E8E8F0',
             resize: 'none',
             outline: 'none',
             fontFamily: 'inherit',
