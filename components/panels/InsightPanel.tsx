@@ -74,6 +74,26 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
         )}
       </div>
 
+      {/* Analysis focus */}
+      {nodeMeta?.prompt && (
+        <div style={{
+          margin: '12px 20px 0',
+          padding: '10px 12px',
+          background: '#0D0D16',
+          border: '0.5px solid #1E1E2E',
+          borderRadius: 6,
+          flexShrink: 0,
+        }}>
+          <div style={{ color: '#3A3A55', fontSize: 9, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 5 }}>
+            Analysis focus
+          </div>
+          <div style={{ color: '#62627A', fontSize: 11, lineHeight: 1.55 }}>
+            {nodeMeta.prompt.replace(/^You are[^.]+\.\s*/i, '').replace(/^As an?[^,]+,\s*/i, '').trim().slice(0, 220)}
+            {nodeMeta.prompt.length > 220 ? '…' : ''}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <div className="px-5 pt-5 pb-12 prose prose-invert prose-sm max-w-none">

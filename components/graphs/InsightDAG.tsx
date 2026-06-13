@@ -14,15 +14,13 @@ import {
   type NodeMouseHandler,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, Sparkles, GitCompare } from 'lucide-react'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
-import { DagChatPanel } from '@/components/panels/DagChatPanel'
+import { Sparkles, Globe } from 'lucide-react'
 import { InsightNode, type InsightNodeData } from './InsightNode'
 import { ProductNode } from './ProductNode'
 import { SegmentNode, type SegmentNodeData } from './SegmentNode'
 import { buildInsightElements, getLayoutedInsightElements } from '@/lib/graph-utils'
 import type { Provider } from '@/lib/langgraph/providers'
-import type { ChatMessage, DagSpec, SegmentSession } from '@/lib/types'
+import type { DagSpec, SegmentSession } from '@/lib/types'
 import type { ApiKeys } from '@/lib/types'
 
 const PRODUCT_ID = '__dag_product__'
@@ -44,15 +42,12 @@ interface Props {
   selectedNode: string | null
   onNodeClick: (nodeId: string) => void
   onRerunNode?: (nodeId: string) => void
-  onBack: () => void
   keys?: Partial<ApiKeys>
-  onChatSend?: (userMsg: string, assistantMsg: ChatMessage) => void
-  onChatAddNode?: (msgIndex: number, additions: { nodes: DagSpec['nodes']; edges: DagSpec['edges'] }) => void
-  availableProviders?: Provider[]
-  onCompare?: () => void
+  onRunPersona?: () => void
+  personaActive?: boolean
 }
 
-export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, onBack, keys = {}, onChatSend, onChatAddNode, availableProviders = [], onCompare }: Props) {
+export function InsightDAG({ product, objective, segment, provider, session, dagSpec, selectedNode, onNodeClick, onRerunNode, keys = {}, onRunPersona, personaActive }: Props) {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges] = useEdgesState<Edge>([])
@@ -154,46 +149,8 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
     [session.status, onNodeClick, onRerunNode]
   )
 
-  const showChat = session.status === 'ready' && dagSpec && onChatSend && onChatAddNode
-
   return (
-    <div className="h-full flex flex-col" style={{ background: '#0A0A0F' }}>
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-          style={{
-            background: 'rgba(19,19,26,0.85)',
-            border: '0.5px solid #1E1E2E',
-            color: '#7A7A8C',
-            backdropFilter: 'blur(8px)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#E6E6EC')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#7A7A8C')}
-        >
-          <ArrowLeft size={12} />
-          Back
-        </button>
-
-        {availableProviders.length > 1 && onCompare && (
-          <button
-            onClick={onCompare}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-            style={{
-              background: 'rgba(83,74,183,0.15)',
-              border: '0.5px solid #534AB7',
-              color: '#9D94F0',
-              backdropFilter: 'blur(8px)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#C4BFFF')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#9D94F0')}
-          >
-            <GitCompare size={12} />
-            Compare providers
-          </button>
-        )}
-      </div>
-
+    <div className="h-full flex flex-col" style={{ background: '#0A0A0F', position: 'relative' }}>
       {/* Planning overlay — shown while /api/plan is in flight */}
       {session.status === 'planning' && (
         <div
@@ -206,10 +163,40 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
         </div>
       )}
 
-      <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
-        <ResizablePanel defaultSize={showChat ? 70 : 100} minSize={30}>
-          <div className="h-full relative">
-            <ReactFlow
+      {/* Floating Regional Fit pill */}
+      {session.status === 'ready' && onRunPersona && (
+        <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+          <button
+            onClick={onRunPersona}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: personaActive ? 'rgba(16,185,129,0.14)' : 'rgba(10,10,16,0.88)',
+              border: `1px solid ${personaActive ? '#10B981' : '#2A2A3C'}`,
+              borderRadius: 20, cursor: 'pointer',
+              color: personaActive ? '#34D399' : '#6E6E8A',
+              fontSize: 11, fontFamily: 'var(--font-mono)',
+              padding: '6px 16px', backdropFilter: 'blur(10px)',
+              boxShadow: personaActive ? '0 0 14px rgba(16,185,129,0.18)' : '0 2px 10px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = personaActive ? '#6EE7B7' : '#C0C0CC'
+              e.currentTarget.style.borderColor = personaActive ? '#10B981' : '#534AB7'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = personaActive ? '#34D399' : '#6E6E8A'
+              e.currentTarget.style.borderColor = personaActive ? '#10B981' : '#2A2A3C'
+            }}
+          >
+            <Globe size={11} />
+            {personaActive ? 'Regional Fit ●' : 'Regional Fit'}
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0 relative">
+        <ReactFlow
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
@@ -232,31 +219,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
               />
               <Controls />
             </ReactFlow>
-          </div>
-        </ResizablePanel>
-
-        {showChat && (
-          <>
-            <ResizableHandle
-              withHandle
-              className="h-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
-            />
-            <ResizablePanel defaultSize={30} minSize={15} maxSize={60}>
-              <DagChatPanel
-                segment={segment}
-                provider={provider}
-                dagSpec={dagSpec!}
-                history={session.chat}
-                keys={keys}
-                product={product}
-                objective={objective}
-                onSend={onChatSend!}
-                onAddNode={onChatAddNode!}
-              />
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+      </div>
     </div>
   )
 }
