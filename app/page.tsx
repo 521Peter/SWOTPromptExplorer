@@ -8,6 +8,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { SegmentGraph } from "@/components/graphs/SegmentGraph";
@@ -16,6 +17,12 @@ import { InsightPanel } from "@/components/panels/InsightPanel";
 import { useInsights } from "@/hooks/useInsights";
 import { useGraphState } from "@/hooks/useGraphState";
 import { ComparePanel } from "@/components/panels/ComparePanel";
+import { WorldPersonaMap } from "@/components/graphs/WorldPersonaMap";
+import { DagChatPanel } from "@/components/panels/DagChatPanel";
+import { RegionDetailPanel } from "@/components/panels/RegionDetailPanel";
+import { usePersona } from "@/hooks/usePersona";
+import { InsightNavbar } from "@/components/panels/InsightNavbar";
+import type { RegionResult } from "@/hooks/usePersona";
 import type { Provider } from "@/lib/langgraph/providers";
 import type { ApiKeys } from "@/lib/types";
 
@@ -27,13 +34,44 @@ export default function Home() {
     new Set(),
   );
   const [isComparing, setIsComparing] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState<RegionResult | null>(null);
   const lastRunConfig = useRef<{ keys: Partial<ApiKeys>; openrouterModel: string } | null>(null);
+  const chatPanelRef = useRef<ImperativePanelHandle>(null);
   const { getSession, runAll, augmentDag, appendChat, markChatNodeAdded, markStale, rerunNode, getProvidersWithResults, tick } = useInsights();
+  const { getPersonaSession, runPersona, addCustomRegion } = usePersona();
   const { state, selectSegment, selectNode, backToSegments, setProvider } =
     useGraphState();
 
   function dismissError(segment: string) {
     setDismissedErrors((prev) => new Set(prev).add(segment));
+  }
+
+  function handleRunPersona() {
+    if (!state.activeSegment || !activeSession?.dagSpec) return
+    runPersona(state.activeSegment, {
+      product,
+      objective,
+      dagSpec: activeSession.dagSpec,
+      insights: activeSession.insights,
+      provider: state.provider,
+      keys: lastRunConfig.current?.keys ?? {},
+    })
+  }
+
+  function handleAddCustomRegion(regionName: string) {
+    if (!state.activeSegment || !activeSession?.dagSpec) return
+    addCustomRegion(
+      state.activeSegment,
+      {
+        product,
+        objective,
+        dagSpec: activeSession.dagSpec,
+        insights: activeSession.insights,
+        provider: state.provider,
+        keys: lastRunConfig.current?.keys ?? {},
+      },
+      regionName,
+    )
   }
 
   function handleRun(config: {
@@ -77,6 +115,25 @@ export default function Home() {
   const activeSession = state.activeSegment
     ? getSession(state.activeSegment, state.provider)
     : null;
+
+  const personaSession = state.activeSegment
+    ? getPersonaSession(state.activeSegment, state.provider)
+    : null;
+  const personaRegions = personaSession ? Object.values(personaSession.regions) : [];
+  const showPersonaMap = personaSession?.active ?? false;
+  const showChat = activeSession?.status === 'ready' && activeSession?.dagSpec != null;
+
+  useEffect(() => {
+    if (showChat) chatPanelRef.current?.expand()
+    else chatPanelRef.current?.collapse()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showChat])
+
+  // Clear region selection when segment or provider changes
+  useEffect(() => {
+    setSelectedRegion(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.activeSegment, state.provider])
 
   const errors = segments
     .map((seg) => {
@@ -217,53 +274,123 @@ export default function Home() {
             activeSession ? (
               <motion.div
                 key="insight"
-                className="flex-1 h-full overflow-hidden"
+                className="flex-1 h-full overflow-hidden flex flex-col"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <ResizablePanelGroup direction="horizontal" className="h-full">
+                <InsightNavbar
+                  product={product}
+                  segment={state.activeSegment!}
+                  provider={state.provider}
+                  onBack={backToSegments}
+                  availableProviders={getProvidersWithResults(state.activeSegment)}
+                  isComparing={isComparing}
+                  onCompare={() => setIsComparing(true)}
+                />
+                {/* Outer split: Left (DAG + Map + Chat) | Detail */}
+                <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+
+                  {/* Left column: maps on top, resizable chat below */}
                   <ResizablePanel defaultSize={72} minSize={40}>
-                    <InsightDAG
-                      product={product}
-                      objective={objective}
-                      segment={state.activeSegment}
-                      provider={state.provider}
-                      session={activeSession}
-                      dagSpec={activeSession.dagSpec}
-                      selectedNode={state.selectedNode}
-                      availableProviders={getProvidersWithResults(state.activeSegment)}
-                      onCompare={() => setIsComparing(true)}
-                      onNodeClick={(nodeId: string) => selectNode(nodeId)}
-                      onRerunNode={(nodeId: string) =>
-                        rerunNode(state.activeSegment!, state.provider, nodeId, {
-                          product, objective,
-                          provider: state.provider,
-                          keys: lastRunConfig.current?.keys ?? {},
-                          openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
-                        })
-                      }
-                      keys={lastRunConfig.current?.keys ?? {}}
-                      onChatSend={(userText, assistantMsg) => {
-                        const seg = state.activeSegment!
-                        const prov = state.provider
-                        appendChat(seg, prov, { role: 'user', content: userText })
-                        appendChat(seg, prov, assistantMsg)
-                      }}
-                      onChatAddNode={(msgIndex, additions) => {
-                        const seg = state.activeSegment!
-                        const prov = state.provider
-                        markChatNodeAdded(seg, prov, msgIndex)
-                        augmentDag(seg, prov, additions, {
-                          product, objective,
-                          provider: prov,
-                          keys: lastRunConfig.current?.keys ?? {},
-                          openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
-                        })
-                      }}
-                      onBack={backToSegments}
-                    />
+                    <ResizablePanelGroup direction="vertical" className="h-full">
+
+                      {/* Maps row */}
+                      <ResizablePanel defaultSize={75} minSize={35}>
+                        <ResizablePanelGroup
+                          key={showPersonaMap ? 'maps-two' : 'maps-one'}
+                          direction="horizontal"
+                          className="h-full"
+                        >
+                          <ResizablePanel defaultSize={showPersonaMap ? 54 : 100} minSize={28}>
+                            <InsightDAG
+                              product={product}
+                              objective={objective}
+                              segment={state.activeSegment}
+                              provider={state.provider}
+                              session={activeSession}
+                              dagSpec={activeSession.dagSpec}
+                              selectedNode={state.selectedNode}
+                              onRunPersona={handleRunPersona}
+                              personaActive={showPersonaMap}
+                              onNodeClick={(nodeId: string) => { selectNode(nodeId); setSelectedRegion(null) }}
+                              keys={lastRunConfig.current?.keys ?? {}}
+                              onRerunNode={(nodeId: string) =>
+                                rerunNode(state.activeSegment!, state.provider, nodeId, {
+                                  product, objective,
+                                  provider: state.provider,
+                                  keys: lastRunConfig.current?.keys ?? {},
+                                  openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                                })
+                              }
+                            />
+                          </ResizablePanel>
+
+                          {showPersonaMap && (
+                            <>
+                              <ResizableHandle
+                                withHandle
+                                className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
+                              />
+                              <ResizablePanel defaultSize={46} minSize={25}>
+                                <WorldPersonaMap
+                                  regions={personaRegions}
+                                  onAddRegion={handleAddCustomRegion}
+                                  onRegionClick={(r) => { setSelectedRegion(r); selectNode(null) }}
+                                  selectedRegionId={selectedRegion?.id ?? null}
+                                />
+                              </ResizablePanel>
+                            </>
+                          )}
+                        </ResizablePanelGroup>
+                      </ResizablePanel>
+
+                      {/* Resize handle — visible only when chat is open */}
+                      <ResizableHandle
+                        className={`h-px transition-colors data-[resize-handle-active]:bg-[#534AB7] ${showChat ? 'bg-[#1E1E2E] hover:bg-[#534AB7]' : 'bg-transparent pointer-events-none'}`}
+                      />
+
+                      {/* Chat — collapsible, never unmounts so expand/collapse is smooth */}
+                      <ResizablePanel
+                        ref={chatPanelRef}
+                        defaultSize={25}
+                        minSize={12}
+                        maxSize={60}
+                        collapsible
+                        collapsedSize={0}
+                      >
+                        {showChat && (
+                          <DagChatPanel
+                            segment={state.activeSegment!}
+                            provider={state.provider}
+                            dagSpec={activeSession.dagSpec!}
+                            history={activeSession.chat}
+                            keys={lastRunConfig.current?.keys ?? {}}
+                            product={product}
+                            objective={objective}
+                            onSend={(userText, assistantMsg) => {
+                              const seg = state.activeSegment!
+                              const prov = state.provider
+                              appendChat(seg, prov, { role: 'user', content: userText })
+                              appendChat(seg, prov, assistantMsg)
+                            }}
+                            onAddNode={(msgIndex, additions) => {
+                              const seg = state.activeSegment!
+                              const prov = state.provider
+                              markChatNodeAdded(seg, prov, msgIndex)
+                              augmentDag(seg, prov, additions, {
+                                product, objective,
+                                provider: prov,
+                                keys: lastRunConfig.current?.keys ?? {},
+                                openrouterModel: lastRunConfig.current?.openrouterModel ?? '',
+                              })
+                            }}
+                          />
+                        )}
+                      </ResizablePanel>
+
+                    </ResizablePanelGroup>
                   </ResizablePanel>
 
                   <ResizableHandle
@@ -271,8 +398,14 @@ export default function Home() {
                     className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
                   />
 
+                  {/* Detail panel — full height, not affected by chat */}
                   <ResizablePanel defaultSize={28} minSize={15} maxSize={55}>
-                    {isComparing && activeSession.dagSpec ? (
+                    {selectedRegion ? (
+                      <RegionDetailPanel
+                        region={selectedRegion}
+                        onClose={() => setSelectedRegion(null)}
+                      />
+                    ) : isComparing && activeSession.dagSpec ? (
                       <ComparePanel
                         segment={state.activeSegment}
                         primaryProvider={state.provider}
@@ -295,6 +428,7 @@ export default function Home() {
                       />
                     )}
                   </ResizablePanel>
+
                 </ResizablePanelGroup>
               </motion.div>
             ) : (
