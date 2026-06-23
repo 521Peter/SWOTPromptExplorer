@@ -26,7 +26,9 @@ export async function POST(req: Request) {
   const { product, provider = 'openrouter', keys = {} } = body
   if (!product?.trim()) return NextResponse.json({ error: 'product is required' }, { status: 400 })
 
-  if (provider === 'openrouter' && !keys?.openrouter) {
+  const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
+
+  if (provider === 'openrouter' && !effectiveKeys.openrouter) {
     return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
   }
   if (provider === 'openai' && !keys?.openai) {
@@ -40,7 +42,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const llm = getLLM(provider, keys)
+    const llm = getLLM(provider, effectiveKeys)
     const response = await llm.invoke([{ role: 'user', content: PROMPT(product.trim()) }])
     const raw = response.content as string
     const jsonMatch = raw.match(/\{[\s\S]*\}/)

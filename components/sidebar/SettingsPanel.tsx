@@ -35,7 +35,14 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
   useEffect(() => {
     const k = loadKeys()
     setKeys(k)
-    setOpenrouterConnected(!!k.openrouter)
+    if (k.openrouter) {
+      setOpenrouterConnected(true)
+    } else {
+      fetch('/api/env-status')
+        .then((r) => r.json())
+        .then((data) => setOpenrouterConnected(!!data.openrouter))
+        .catch(() => {})
+    }
   }, [open])
 
   useEffect(() => {
@@ -62,8 +69,10 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
   function handleClear() {
     clearKeys()
     setKeys({})
-    // reload openrouter from env
-    setOpenrouterConnected(!!loadKeys().openrouter)
+    fetch('/api/env-status')
+      .then((r) => r.json())
+      .then((data) => setOpenrouterConnected(!!data.openrouter))
+      .catch(() => setOpenrouterConnected(false))
   }
 
   function toggleVisible(id: string) {
@@ -175,7 +184,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
                 value={keys.openrouter ?? ''}
                 onChange={(e) => {
                   setKeys((prev) => ({ ...prev, openrouter: e.target.value }))
-                  setOpenrouterConnected(!!e.target.value || !!process.env.NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY)
+                  if (e.target.value) setOpenrouterConnected(true)
                 }}
                 className="w-full pr-9 rounded-lg outline-none placeholder-[#2A2A3C] font-mono"
                 style={{

@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   }
 
   const { product = '', objective = '', segments = [], openrouterKey } = body
-  const apiKey = openrouterKey || process.env.NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY
+  const apiKey = openrouterKey || process.env.DEFAULT_OPENROUTER_KEY
   if (!apiKey) return NextResponse.json({ error: 'OpenRouter API key required.' }, { status: 400 })
 
   let result: { product: string; objective: string; segments: string[] } | null = null

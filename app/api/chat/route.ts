@@ -108,7 +108,9 @@ export async function POST(req: Request) {
     )
   }
 
-  if (provider === 'openrouter' && !keys?.openrouter) {
+  const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
+
+  if (provider === 'openrouter' && !effectiveKeys.openrouter) {
     return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
   }
   if (provider === 'openai' && !keys?.openai) {
@@ -121,7 +123,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Groq API key is missing. Open Settings and enter your key.' }, { status: 400 })
   }
 
-  const llm = getLLM(provider, keys)
+  const llm = getLLM(provider, effectiveKeys)
 
   const messages = [
     { role: 'system' as const, content: buildSystemPrompt(dagSpec, product, objective, segment) },

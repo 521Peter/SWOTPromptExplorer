@@ -5,14 +5,13 @@ import { VALID_OPENROUTER_MODEL_IDS, DEFAULT_OPENROUTER_MODEL } from '@/constant
 const STORAGE_KEY = 'swot_api_keys'
 const PROVIDER_KEY = 'swot_active_provider'
 
-// Optional env-var defaults (NEXT_PUBLIC_ so they reach the client).
-// Keys entered in the Settings panel always take precedence.
+// Optional env-var defaults for keys that can safely reach the client.
+// The OpenRouter key is server-only (DEFAULT_OPENROUTER_KEY) and never included here.
 function envDefaults(): Partial<ApiKeys> {
   return {
-    anthropic:      process.env.NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY  ?? '',
-    openai:         process.env.NEXT_PUBLIC_DEFAULT_OPENAI_KEY     ?? '',
-    groq:           process.env.NEXT_PUBLIC_DEFAULT_GROQ_KEY       ?? '',
-    openrouter:     process.env.NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY ?? '',
+    anthropic:       process.env.NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY ?? '',
+    openai:          process.env.NEXT_PUBLIC_DEFAULT_OPENAI_KEY    ?? '',
+    groq:            process.env.NEXT_PUBLIC_DEFAULT_GROQ_KEY      ?? '',
     openrouterModel: 'openai/gpt-4o-mini',
   }
 }

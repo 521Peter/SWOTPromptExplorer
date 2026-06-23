@@ -32,7 +32,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'dagSpec required' }, { status: 400 })
   }
 
-  if (provider === 'openrouter' && !keys?.openrouter) {
+  const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
+
+  if (provider === 'openrouter' && !effectiveKeys.openrouter) {
     return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
   }
   if (provider === 'openai' && !keys?.openai) {
@@ -46,7 +48,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const graph = buildInsightGraph(provider, keys, dagSpec)
+    const graph = buildInsightGraph(provider, effectiveKeys, dagSpec)
     const result = await graph.invoke({ product, objective, segment, provider, dagSpec, outputs: {} })
 
     return NextResponse.json({
