@@ -65,7 +65,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const llm = getLLM(provider, keys)
+    const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
+    const llm = getLLM(provider, effectiveKeys)
     const prompt = buildPrompt(product, objective, segment, region, dagSpec, insights, returnCoordinates)
     const response = await llm.invoke([{ role: 'user', content: prompt }])
     const text = typeof response.content === 'string' ? response.content : String(response.content)
