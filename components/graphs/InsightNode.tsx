@@ -29,7 +29,7 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
       transition={{ duration: 0.28, delay: (d.animIndex ?? 0) * 0.055, ease: 'easeOut' }}
     >
     <div
-      title={d.stale ? 'Run with updated inputs' : undefined}
+      title={d.stale ? '使用更新后的输入重新分析' : undefined}
       style={{
         width: 180,
         background: '#13131A',

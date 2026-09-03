@@ -11,9 +11,9 @@ interface Props {
 
 export function RegionDetailPanel({ region, onClose }: Props) {
   const fitLabel =
-    region.pct >= 76 ? 'Strong fit' :
-    region.pct >= 51 ? 'Moderate fit' :
-    region.pct >= 26 ? 'Weak fit' : 'Poor fit'
+    region.pct >= 76 ? '契合度强' :
+    region.pct >= 51 ? '契合度中等' :
+    region.pct >= 26 ? '契合度较弱' : '契合度低'
 
   const fitColor =
     region.pct >= 76 ? '#10B981' :
@@ -84,7 +84,7 @@ export function RegionDetailPanel({ region, onClose }: Props) {
                 color: '#6A6A8A', fontSize: 9, fontFamily: 'var(--font-mono)',
                 textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6,
               }}>
-                Market overview
+                市场概览
               </div>
               <p style={{ color: '#C4C4D8', fontSize: 12, lineHeight: 1.65, margin: 0 }}>
                 {region.explanation}
@@ -97,7 +97,7 @@ export function RegionDetailPanel({ region, onClose }: Props) {
             color: '#6A6A8A', fontSize: 9, fontFamily: 'var(--font-mono)',
             textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10,
           }}>
-            Key factors
+            关键因素
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {region.reasons.map((reason, i) => (

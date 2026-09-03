@@ -40,7 +40,7 @@ export function InsightNavbar({
         onMouseLeave={(e) => (e.currentTarget.style.color = '#4A4A5E')}
       >
         <ArrowLeft size={12} />
-        Back
+        返回
       </button>
 
       <div style={{ width: 1, height: 16, background: '#1C1C2A', flexShrink: 0 }} />
@@ -48,7 +48,7 @@ export function InsightNavbar({
       {/* Breadcrumb */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, overflow: 'hidden' }}>
         <span style={{ color: '#6A6A88', fontSize: 11, fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {product || 'Product'}
+          {product || '产品'}
         </span>
         <span style={{ color: '#3E3E55', fontSize: 13, flexShrink: 0 }}>›</span>
         <span style={{ color: '#C0C0DC', fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -70,7 +70,7 @@ export function InsightNavbar({
           onMouseLeave={(e) => { e.currentTarget.style.color = isComparing ? '#9D94F0' : '#5A5A6C'; e.currentTarget.style.borderColor = isComparing ? '#534AB7' : '#1E1E2E' }}
         >
           <GitCompare size={11} />
-          Compare
+          对比
         </button>
       )}
     </div>

@@ -37,7 +37,7 @@ export function getMissingProviderKeyError(
   const requirement = requirements[provider];
   return keys[requirement.key]
     ? null
-    : `${requirement.label} API key is missing. Open Settings and enter your key.`;
+    : `缺少 ${requirement.label} API Key，请在设置中填写。`;
 }
 
 export function getLLM(
@@ -104,6 +104,6 @@ export function getLLM(
         },
       });
     default:
-      throw new Error(`Unknown provider: ${provider}`);
+      throw new Error(`未知的模型服务商：${provider}`);
   }
 }

@@ -14,6 +14,14 @@ const V_GAP = 180
 
 export const PRODUCT_NODE_POSITION = { x: 0, y: 0 }
 
+const EDGE_RELATION_LABELS = {
+  amplifies: '加剧',
+  informs: '支撑',
+  shapes: '塑造',
+  enables: '促成',
+  activates: '激活',
+} as const
+
 export function getRadialPosition(index: number, total: number): { x: number; y: number } {
   const totalWidth = total * NODE_W + (total - 1) * H_GAP
   const startX = (PRODUCT_NODE_W - totalWidth) / 2
@@ -87,7 +95,7 @@ export function buildInsightElements(
     id: `${segmentId}:${e.from}-${e.to}`,
     source: `${segmentId}:${e.from}`,
     target: `${segmentId}:${e.to}`,
-    label: e.relation,
+    label: EDGE_RELATION_LABELS[e.relation],
     type: 'default',
     animated: false,
     markerEnd: {

@@ -29,11 +29,11 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
   const borderWidth = d.status === 'idle' ? 0.5 : 1.5
 
   const statusText =
-    d.status === 'ready'    ? 'Ready' :
-    d.status === 'loading'  ? 'Analyzing' :
-    d.status === 'planning' ? 'Planning' :
-    d.status === 'error'    ? 'Error' :
-    'Idle'
+    d.status === 'ready'    ? '已完成' :
+    d.status === 'loading'  ? '分析中' :
+    d.status === 'planning' ? '规划中' :
+    d.status === 'error'    ? '出错' :
+    '待分析'
 
   const statusColor =
     d.status === 'ready'    ? '#10B981' :

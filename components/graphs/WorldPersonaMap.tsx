@@ -60,9 +60,9 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
         background: '#fff',
       }}>
         {[
-          { icon: <Plus size={12} />, title: 'Zoom in',   onClick: () => setZoom((z) => Math.min(12, +parseFloat((z * 1.6).toFixed(2)))) },
-          { icon: <Minus size={12} />, title: 'Zoom out', onClick: () => setZoom((z) => Math.max(1, +parseFloat((z / 1.6).toFixed(2)))) },
-          ...(isZoomed ? [{ icon: <Minimize2 size={12} />, title: 'Reset view', onClick: resetZoom }] : []),
+          { icon: <Plus size={12} />, title: '放大',   onClick: () => setZoom((z) => Math.min(12, +parseFloat((z * 1.6).toFixed(2)))) },
+          { icon: <Minus size={12} />, title: '缩小', onClick: () => setZoom((z) => Math.max(1, +parseFloat((z / 1.6).toFixed(2)))) },
+          ...(isZoomed ? [{ icon: <Minimize2 size={12} />, title: '重置视图', onClick: resetZoom }] : []),
         ].map(({ icon, title, onClick }, idx) => (
           <button
             key={title}
@@ -179,7 +179,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
                           <text textAnchor="middle" dominantBaseline="central"
                             style={{ fill: '#AAA', fontSize: 8, fontFamily: 'var(--font-mono)', pointerEvents: 'none' }}
                           >
-                            {region.name} · click to zoom
+                            {region.name} · 点击放大
                           </text>
                         </g>
                       )}
@@ -214,7 +214,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
           value={addInput}
           onChange={(e) => setAddInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleAdd() }}
-          placeholder="Analyze a region…  e.g. ANZ, Gulf States, Nordic"
+          placeholder="分析其他区域… 例如：大湾区、海湾国家、北欧"
           style={{
             flex: 1, background: 'none', border: 'none', outline: 'none',
             color: '#D0D0E8', fontSize: 10, fontFamily: 'var(--font-mono)',
@@ -233,7 +233,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(83,74,183,0.28)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(83,74,183,0.15)' }}
             >
-              Analyze →
+              分析 →
             </button>
             <button
               onClick={() => setAddInput('')}
@@ -249,4 +249,3 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
     </div>
   )
 }
-

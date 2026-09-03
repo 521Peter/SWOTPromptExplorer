@@ -66,7 +66,7 @@ function NodePreviewCard({
             flexShrink: 0,
           }}
         >
-          <Check size={11} /> Added
+          <Check size={11} /> 已添加
         </span>
       ) : (
         <button
@@ -95,7 +95,7 @@ function NodePreviewCard({
             e.currentTarget.style.color = '#A89EE8'
           }}
         >
-          <GitBranch size={9} /> Add to graph
+          <GitBranch size={9} /> 添加到图谱
         </button>
       )}
     </div>
@@ -149,7 +149,7 @@ export function DagChatPanel({
     } catch (err) {
       onSend(text, {
         role: 'assistant',
-        content: err instanceof Error ? `Error: ${err.message}` : 'Something went wrong.',
+        content: err instanceof Error ? `错误：${err.message}` : '发生了未知错误。',
       })
     } finally {
       setLoading(false)
@@ -188,7 +188,7 @@ export function DagChatPanel({
         }}
       >
         <MessageCircle size={13} />
-        <span>Refine analysis</span>
+        <span>深入分析</span>
         {pendingCount > 0 && (
           <span
             style={{
@@ -202,7 +202,7 @@ export function DagChatPanel({
               border: '0.5px solid #534AB7',
             }}
           >
-            {pendingCount} node{pendingCount > 1 ? 's' : ''} to add
+            {pendingCount} 个节点待添加
           </span>
         )}
       </div>
@@ -222,7 +222,7 @@ export function DagChatPanel({
       >
         {history.length === 0 && (
           <p style={{ color: '#3A3A4C', fontSize: 11, margin: 0 }}>
-            Ask a question — the answer will appear here with an option to add it as a graph node.
+            输入问题后，回答会显示在这里，并可作为新节点添加到分析图谱。
           </p>
         )}
 
@@ -284,7 +284,7 @@ export function DagChatPanel({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about this segment…"
+          placeholder="继续询问这个客户群体…"
           rows={1}
           style={{
             flex: 1,

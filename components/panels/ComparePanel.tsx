@@ -71,7 +71,7 @@ function InsightColumn({
           </div>
         ) : (
           <p style={{ color: '#3A3A4C', fontSize: 12, marginTop: 8 }}>
-            {nodeId ? 'No content for this node.' : 'Click a node in the DAG to compare.'}
+            {nodeId ? '该节点暂无内容。' : '点击 DAG 中的节点进行对比。'}
           </p>
         )}
       </div>
@@ -103,13 +103,13 @@ export function ComparePanel({
       >
         <div className="flex items-center gap-2">
           <GitCompare size={13} style={{ color: '#534AB7' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#D0D0DC' }}>Compare providers</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#D0D0DC' }}>对比模型服务商</span>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Right-side provider picker */}
           <div className="flex items-center gap-1.5">
-            <span style={{ fontSize: 11, color: '#5A5A6C' }}>vs</span>
+            <span style={{ fontSize: 11, color: '#5A5A6C' }}>对比</span>
             <select
               value={compareProvider}
               onChange={(e) => setCompareProvider(e.target.value as Provider)}
@@ -132,7 +132,7 @@ export function ComparePanel({
 
           <button
             onClick={onClose}
-            title="Close compare"
+            title="关闭对比"
             className="flex items-center justify-center rounded-md transition-colors"
             style={{ width: 26, height: 26, color: '#6B6B80', background: 'transparent' }}
             onMouseEnter={(e) => (e.currentTarget.style.color = '#C0C0CC')}

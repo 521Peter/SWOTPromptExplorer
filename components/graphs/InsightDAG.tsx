@@ -60,7 +60,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
 
     const productNode: Node = {
       id: PRODUCT_ID, type: 'productNode', position: { x: 0, y: 0 },
-      data: { label: product || 'Product', objective }, selectable: false,
+      data: { label: product || '产品', objective }, selectable: false,
     }
     const segmentNode: Node = {
       id: SEGMENT_ID, type: 'segmentNode', position: { x: 0, y: 0 },
@@ -158,8 +158,8 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
           style={{ background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(4px)' }}
         >
           <Sparkles size={20} style={{ color: '#8B5CF6' }} className="animate-pulse" />
-          <p style={{ color: '#C4B5FD', fontSize: 13, fontWeight: 500 }}>Planning analysis&hellip;</p>
-          <p style={{ color: '#5A5A6C', fontSize: 11 }}>The LLM is designing a custom DAG for this segment</p>
+          <p style={{ color: '#C4B5FD', fontSize: 13, fontWeight: 500 }}>正在规划分析…</p>
+          <p style={{ color: '#5A5A6C', fontSize: 11 }}>大语言模型正在为该客户群体设计专属分析图谱</p>
         </div>
       )}
 
@@ -190,7 +190,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
             }}
           >
             <Globe size={11} />
-            {personaActive ? 'Regional Fit ●' : 'Regional Fit'}
+            {personaActive ? '区域契合度 ●' : '区域契合度'}
           </button>
         </div>
       )}

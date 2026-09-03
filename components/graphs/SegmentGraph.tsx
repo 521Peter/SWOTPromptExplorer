@@ -42,7 +42,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
       id: PRODUCT_ID,
       type: 'productNode',
       position: PRODUCT_NODE_POSITION,
-      data: { label: product || 'Product', objective } satisfies ProductNodeData,
+      data: { label: product || '产品', objective } satisfies ProductNodeData,
     }
     const segmentNodes: Node[] = segments.map((seg, i) => ({
       id: seg,
@@ -65,7 +65,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
   useEffect(() => {
     setNodes((prev) =>
       prev.map((n) => {
-        if (n.id === PRODUCT_ID) return { ...n, data: { ...n.data, label: product || 'Product', objective } }
+        if (n.id === PRODUCT_ID) return { ...n, data: { ...n.data, label: product || '产品', objective } }
         const session = getSession(n.id, provider)
         return {
           ...n,
@@ -93,7 +93,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
     return (
       <div className="h-full flex items-center justify-center" style={{ background: '#0A0A0F' }}>
         <p style={{ color: '#5A5A6C', fontSize: 13 }}>
-          Add segments in the sidebar and run analysis to get started.
+          请在左侧添加客户群体，然后开始分析。
         </p>
       </div>
     )
@@ -146,7 +146,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         }}
       >
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#534AB7', display: 'inline-block' }} />
-        Click any ready segment to explore its insights
+        点击任一已完成的客户群体查看洞察
       </div>
     </div>
   )

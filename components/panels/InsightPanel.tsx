@@ -59,7 +59,7 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
           </span>
         )}
         <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#E6E6EC', letterSpacing: -0.2 }}>
-          {nodeMeta?.label ?? 'Select a node'}
+          {nodeMeta?.label ?? '请选择节点'}
         </span>
         {promptKey && (
           <button
@@ -85,7 +85,7 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
           flexShrink: 0,
         }}>
           <div style={{ color: '#3A3A55', fontSize: 9, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 5 }}>
-            Analysis focus
+            分析重点
           </div>
           <div style={{ color: '#62627A', fontSize: 11, lineHeight: 1.55 }}>
             {nodeMeta.prompt.replace(/^You are[^.]+\.\s*/i, '').replace(/^As an?[^,]+,\s*/i, '').trim().slice(0, 220)}
@@ -125,7 +125,7 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
             </ReactMarkdown>
           ) : (
             <p style={{ color: '#5A5A6C', fontSize: 13 }}>
-              {promptKey ? 'Loading…' : 'Click any insight node to read its analysis.'}
+              {promptKey ? '加载中…' : '点击任一洞察节点查看详细分析。'}
             </p>
           )}
         </div>

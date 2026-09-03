@@ -59,7 +59,7 @@ export function validateForm(
   const o = objective.trim()
   if (!o) {
     errors.objective = '请填写分析目标。'
-  } else if (o.length < 4) {
+  } else if (o.length < 2) {
     errors.objective = '分析目标太短。'
   } else if (isGibberish(o)) {
     errors.objective = '请输入有效的业务目标。'
@@ -92,7 +92,7 @@ export function validateField(field: 'product' | 'objective' | 'segment', value:
   }
   if (field === 'objective') {
     if (!v) return null
-    if (v.length < 4) return '分析目标太短。'
+    if (v.length < 2) return '分析目标太短。'
     if (isGibberish(v)) return '请输入有效的业务目标。'
   }
   if (field === 'segment') {

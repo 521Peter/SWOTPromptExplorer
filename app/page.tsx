@@ -228,7 +228,7 @@ export default function Home() {
                               fontWeight: 600,
                             }}
                           >
-                            {segment} — Analysis failed
+                            {segment} — 分析失败
                           </AlertTitle>
                           <AlertDescription
                             style={{

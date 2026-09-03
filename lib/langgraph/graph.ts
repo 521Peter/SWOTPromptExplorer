@@ -6,7 +6,7 @@ import type { ApiKeys, DagSpec } from '@/lib/types'
 
 export function buildInsightGraph(provider: Provider, keys: Partial<ApiKeys>, dagSpec: DagSpec) {
   if (!dagSpec.nodes || dagSpec.nodes.length === 0) {
-    throw new Error('dagSpec must contain at least one node')
+    throw new Error('dagSpec 至少需要包含一个节点')
   }
   const llm = getLLM(provider, keys)
   const graph = new StateGraph(InsightState)
