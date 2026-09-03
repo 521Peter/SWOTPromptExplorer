@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getLLM } from '@/lib/langgraph/providers'
-import type { Provider } from '@/lib/langgraph/providers'
+import { getLLM, getMissingProviderKeyError, resolveProviderKeys, type Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys, DagSpec } from '@/lib/types'
+import { parseJsonResponse } from '@/lib/langgraph/response'
 
 function buildPrompt(
   product: string,
@@ -23,23 +23,23 @@ function buildPrompt(
     ? ',\n  "coordinates": [<longitude_number>, <latitude_number>]'
     : ''
 
-  return `You are a regional market analyst for ${region}.
+  return `你是一名负责 ${region} 的区域市场分析师。无论输入使用何种语言，所有分析内容都必须使用简体中文。
 
-Product: ${product}
-Objective: ${objective}
-Customer Segment: ${segment}
+产品：${product}
+目标：${objective}
+客户群体：${segment}
 
-Existing strategic analysis:
+已有战略分析：
 ${context}
 
-Rate the market fit for ${region} on a 0–100 scale and give exactly 3 concise reasons (max 12 words each).
-Scoring: 0–25 poor fit · 26–50 weak · 51–75 moderate · 76–100 strong
+请按 0–100 分评估 ${region} 的市场契合度，并给出恰好 3 条简短理由（每条不超过 20 个汉字）。
+评分标准：0–25 契合度低 · 26–50 较弱 · 51–75 中等 · 76–100 较强
 
-Respond with valid JSON only, no markdown:
+只返回有效 JSON，不要使用 Markdown。explanation 和 reasons 必须为简体中文：
 {
   "pct": <integer 0-100>,
-  "explanation": "<2-3 sentence narrative on why this region has this fit score, covering market dynamics, risks, and opportunity>",
-  "reasons": ["<reason 1>", "<reason 2>", "<reason 3>"]${coordField}
+  "explanation": "<用 2–3 句话说明该评分，涵盖市场动态、风险和机会>",
+  "reasons": ["<理由 1>", "<理由 2>", "<理由 3>"]${coordField}
 }`
 }
 
@@ -62,30 +62,28 @@ export async function POST(req: Request) {
     }
 
     if (!product || !region || !dagSpec) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: '缺少必填字段' }, { status: 400 })
     }
 
-    const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
-    const llm = getLLM(provider, effectiveKeys)
+    const effectiveKeys = resolveProviderKeys(keys)
+    const keyError = getMissingProviderKeyError(provider, effectiveKeys)
+    if (keyError) return NextResponse.json({ error: keyError }, { status: 400 })
+    const llm = getLLM(provider, effectiveKeys, { jsonMode: true })
     const prompt = buildPrompt(product, objective, segment, region, dagSpec, insights, returnCoordinates)
     const response = await llm.invoke([{ role: 'user', content: prompt }])
-    const text = typeof response.content === 'string' ? response.content : String(response.content)
-
-    let parsed: { pct: number; explanation: string; reasons: string[]; coordinates?: [number, number] }
-    try {
-      parsed = JSON.parse(text.trim())
-    } catch {
-      const m = text.match(/\{[\s\S]*\}/)
-      if (!m) throw new Error('No JSON in LLM response')
-      parsed = JSON.parse(m[0])
-    }
+    const parsed = parseJsonResponse<{
+      pct: number
+      explanation: string
+      reasons: string[]
+      coordinates?: [number, number]
+    }>(response.content, '区域分析失败')
 
     parsed.pct = Math.max(0, Math.min(100, Math.round(parsed.pct)))
 
     return NextResponse.json(parsed)
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Unknown error' },
+      { error: err instanceof Error ? err.message : '未知错误' },
       { status: 500 },
     )
   }

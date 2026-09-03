@@ -81,7 +81,7 @@ export function useInsights() {
         sessions.current[key] = {
           ...sessions.current[key],
           status: 'error',
-          error: err instanceof Error ? err.message : 'Planning failed',
+          error: err instanceof Error ? err.message : '分析规划失败',
         }
         forceUpdate((n) => n + 1)
         return null
@@ -147,7 +147,7 @@ export function useInsights() {
           status: 'error',
           insights: null,
           generatedAt: null,
-          error: err instanceof Error ? err.message : 'Unknown error',
+          error: err instanceof Error ? err.message : '未知错误',
         }
       }
 

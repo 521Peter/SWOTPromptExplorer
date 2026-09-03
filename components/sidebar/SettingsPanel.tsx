@@ -5,6 +5,7 @@ import { Settings, X, Check, Eye, EyeOff, Wifi, Key } from 'lucide-react'
 import { saveKeys, loadKeys, clearKeys, saveProvider } from '@/lib/settings/keys'
 import type { Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
+import { DEFAULT_GLM_MODEL, GLM_MODELS } from '@/constants/glm-models'
 
 const OTHER_PROVIDERS: {
   id: Provider
@@ -30,20 +31,27 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
   const [visible, setVisible] = useState<Record<string, boolean>>({})
   const [saved, setSaved] = useState(false)
   const [openrouterConnected, setOpenrouterConnected] = useState(false)
+  const [glmConnected, setGlmConnected] = useState(false)
+  const [openrouterEnvAvailable, setOpenrouterEnvAvailable] = useState(false)
+  const [glmEnvAvailable, setGlmEnvAvailable] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  function handleOpen() {
     const k = loadKeys()
     setKeys(k)
-    if (k.openrouter) {
-      setOpenrouterConnected(true)
-    } else {
-      fetch('/api/env-status')
-        .then((r) => r.json())
-        .then((data) => setOpenrouterConnected(!!data.openrouter))
-        .catch(() => {})
-    }
-  }, [open])
+    setOpenrouterConnected(!!k.openrouter)
+    setGlmConnected(!!k.glm)
+    setOpen(true)
+    fetch('/api/env-status')
+      .then((r) => r.json())
+      .then((data) => {
+        setOpenrouterEnvAvailable(!!data.openrouter)
+        setGlmEnvAvailable(!!data.glm)
+        setOpenrouterConnected(!!k.openrouter || !!data.openrouter)
+        setGlmConnected(!!k.glm || !!data.glm)
+      })
+      .catch(() => {})
+  }
 
   useEffect(() => {
     if (!open) return
@@ -71,8 +79,16 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
     setKeys({})
     fetch('/api/env-status')
       .then((r) => r.json())
-      .then((data) => setOpenrouterConnected(!!data.openrouter))
-      .catch(() => setOpenrouterConnected(false))
+      .then((data) => {
+        setOpenrouterEnvAvailable(!!data.openrouter)
+        setGlmEnvAvailable(!!data.glm)
+        setOpenrouterConnected(!!data.openrouter)
+        setGlmConnected(!!data.glm)
+      })
+      .catch(() => {
+        setOpenrouterConnected(false)
+        setGlmConnected(false)
+      })
   }
 
   function toggleVisible(id: string) {
@@ -82,6 +98,8 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
   function selectProvider(p: Provider) {
     if (p === 'openrouter') {
       if (!openrouterConnected) return
+    } else if (p === 'glm') {
+      if (!glmConnected) return
     } else {
       const keyId = OTHER_PROVIDERS.find((x) => x.id === p)?.keyId
       if (!keyId || !keys[keyId]) return
@@ -93,8 +111,8 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
-        title="Settings"
+        onClick={handleOpen}
+        title="设置"
         className="inline-flex items-center justify-center rounded-md transition-colors"
         style={{ width: 28, height: 28, color: '#6B6B80', background: 'transparent' }}
         onMouseEnter={(e) => { e.currentTarget.style.color = '#C0C0CC'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
@@ -122,8 +140,8 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5" style={{ height: 56, borderBottom: '1px solid #1E1E2E', flexShrink: 0 }}>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 14, color: '#D0D0DC', letterSpacing: '-0.2px' }}>Settings</div>
-            <div style={{ fontSize: 11, color: '#5A5A6C', marginTop: 1 }}>Keys stored in browser only</div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: '#D0D0DC', letterSpacing: '-0.2px' }}>设置</div>
+            <div style={{ fontSize: 11, color: '#5A5A6C', marginTop: 1 }}>API Key 仅保存在浏览器中</div>
           </div>
           <button
             onClick={() => setOpen(false)}
@@ -139,7 +157,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
         {/* Body */}
         <div className="flex flex-col gap-1 px-4 py-4 flex-1 overflow-y-auto">
           <p style={{ fontSize: 12, color: '#5A5A6C', lineHeight: 1.6, marginBottom: 12 }}>
-            OpenRouter is active by default. Add a key for any other provider to switch to it.
+            默认使用 OpenRouter。填写其他模型服务商的 API Key 后即可切换。
           </p>
 
           {/* OpenRouter — key input + env fallback */}
@@ -158,7 +176,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
                   OpenRouter
                 </div>
                 <div style={{ fontSize: 11, color: openrouterConnected ? '#10B981' : '#5A5A6C', marginTop: 1 }}>
-                  {keys.openrouter ? 'Key saved' : openrouterConnected ? 'Connected via environment' : 'Key not found'}
+                  {keys.openrouter ? '已保存 Key' : openrouterConnected ? '已通过环境变量连接' : '未找到 Key'}
                 </div>
               </div>
               <button
@@ -180,11 +198,12 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
               <Key size={11} style={{ position: 'absolute', left: 20, color: '#333345', pointerEvents: 'none' }} />
               <input
                 type={visible['openrouter'] ? 'text' : 'password'}
-                placeholder="sk-or-... (overrides env key)"
+                placeholder="sk-or-...（覆盖环境变量）"
                 value={keys.openrouter ?? ''}
                 onChange={(e) => {
-                  setKeys((prev) => ({ ...prev, openrouter: e.target.value }))
-                  if (e.target.value) setOpenrouterConnected(true)
+                  const value = e.target.value
+                  setKeys((prev) => ({ ...prev, openrouter: value }))
+                  setOpenrouterConnected(!!value || openrouterEnvAvailable)
                 }}
                 className="w-full pr-9 rounded-lg outline-none placeholder-[#2A2A3C] font-mono"
                 style={{
@@ -208,6 +227,84 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
               >
                 {visible['openrouter'] ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
+            </div>
+          </div>
+
+          {/* GLM — OpenAI-compatible Zhipu API with selectable model */}
+          <div
+            className="flex flex-col rounded-xl mb-2"
+            style={{
+              border: `1px solid ${provider === 'glm' ? '#2563EB40' : '#1E1E2E'}`,
+              background: provider === 'glm' ? '#2563EB08' : 'transparent',
+              transition: 'border-color 0.15s, background 0.15s',
+            }}
+          >
+            <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+              <Wifi size={14} style={{ color: glmConnected ? '#10B981' : '#5A5A6C', flexShrink: 0 }} />
+              <div className="flex-1 min-w-0">
+                <div style={{ fontWeight: 600, fontSize: 12, color: provider === 'glm' ? '#D0D0DC' : '#7A7A8C', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  GLM
+                </div>
+                <div style={{ fontSize: 11, color: glmConnected ? '#10B981' : '#5A5A6C', marginTop: 1 }}>
+                  {keys.glm ? '已保存 Key' : glmConnected ? '已通过环境变量连接' : '未找到 Key'}
+                </div>
+              </div>
+              <button
+                onClick={() => selectProvider('glm')}
+                disabled={!glmConnected}
+                className="flex items-center justify-center rounded-full transition-all flex-shrink-0"
+                style={{
+                  width: 18, height: 18,
+                  border: `2px solid ${provider === 'glm' ? '#2563EB' : (glmConnected ? '#3A3A4C' : '#252535')}`,
+                  background: provider === 'glm' ? '#2563EB' : 'transparent',
+                  cursor: glmConnected ? 'pointer' : 'default',
+                  opacity: glmConnected ? 1 : 0.3,
+                }}
+              >
+                {provider === 'glm' && <span className="inline-block rounded-full" style={{ width: 6, height: 6, background: '#fff' }} />}
+              </button>
+            </div>
+            <div className="relative flex items-center px-3 pb-2">
+              <Key size={11} style={{ position: 'absolute', left: 20, color: '#333345', pointerEvents: 'none' }} />
+              <input
+                type={visible.glm ? 'text' : 'password'}
+                placeholder="智谱 API Key（覆盖环境变量）"
+                value={keys.glm ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setKeys((prev) => ({ ...prev, glm: value }))
+                  setGlmConnected(!!value || glmEnvAvailable)
+                }}
+                className="w-full pr-9 rounded-lg outline-none placeholder-[#2A2A3C] font-mono"
+                style={{
+                  height: 34,
+                  paddingLeft: 28,
+                  background: '#0A0A12',
+                  border: `1px solid ${keys.glm ? '#2563EB35' : '#1E1E2E'}`,
+                  color: '#C0C0CC',
+                  fontSize: 12,
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => toggleVisible('glm')}
+                className="absolute right-5 flex items-center justify-center"
+                style={{ color: '#333345', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                {visible.glm ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+            </div>
+            <div className="relative px-3 pb-3">
+              <select
+                value={keys.glmModel ?? DEFAULT_GLM_MODEL}
+                onChange={(e) => setKeys((prev) => ({ ...prev, glmModel: e.target.value }))}
+                className="w-full h-8 px-3 pr-8 rounded-lg text-xs appearance-none"
+                style={{ background: '#17171F', border: '1px solid #1E1E2E', color: '#E6E6EC' }}
+              >
+                {GLM_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>{model.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -235,13 +332,13 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {hasKey
-                      ? <span className="flex items-center gap-1" style={{ fontSize: 11, color: '#22C55E' }}><Check size={10} />Connected</span>
-                      : <span style={{ fontSize: 11, color: '#3A3A4C' }}>No key</span>
+                      ? <span className="flex items-center gap-1" style={{ fontSize: 11, color: '#22C55E' }}><Check size={10} />已连接</span>
+                      : <span style={{ fontSize: 11, color: '#3A3A4C' }}>未填写 Key</span>
                     }
                     <button
                       onClick={() => selectProvider(p.id)}
                       disabled={!hasKey}
-                      title={!hasKey ? 'Add a key first' : isActive ? 'Active provider' : 'Use this provider'}
+                      title={!hasKey ? '请先填写 API Key' : isActive ? '当前服务商' : '使用此服务商'}
                       className="flex items-center justify-center rounded-full transition-all flex-shrink-0"
                       style={{
                         width: 18, height: 18,
@@ -302,7 +399,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
               transition: 'background 0.2s, border-color 0.2s',
             }}
           >
-            {saved ? <><Check size={13} /> Saved</> : 'Save keys'}
+            {saved ? <><Check size={13} /> 已保存</> : '保存 Key'}
           </button>
           <button
             onClick={handleClear}
@@ -311,7 +408,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E53E3E'; e.currentTarget.style.color = '#FC8181' }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2A2A3D'; e.currentTarget.style.color = '#6B6B80' }}
           >
-            Clear all
+            全部清除
           </button>
         </div>
       </div>

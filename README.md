@@ -32,14 +32,20 @@ npm install
 Provide default keys via environment variables so the app works without the Settings panel:
 
 ```bash
-# .env.local
-NEXT_PUBLIC_DEFAULT_OPENROUTER_KEY=sk-or-...
+# .env.local — server-only shared defaults
+DEFAULT_OPENROUTER_KEY=sk-or-...
+DEFAULT_GLM_KEY=your-zhipu-api-key
+DEFAULT_GLM_MODEL=glm-5.3-flash
+# Optional; switch to /api/coding/paas/v4 only for a GLM Coding Plan key
+DEFAULT_GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+
+# Optional browser-visible defaults for the other providers
 NEXT_PUBLIC_DEFAULT_OPENAI_KEY=sk-...
 NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY=sk-ant-...
 NEXT_PUBLIC_DEFAULT_GROQ_KEY=gsk_...
 ```
 
-Keys can also be entered at runtime via the **Settings** (⚙) panel. They are stored in `sessionStorage` (cleared when the tab closes, never written to disk) and take precedence over env vars.
+Keys can also be entered at runtime via the **Settings** (⚙) panel. They are stored in `sessionStorage` (cleared when the tab closes, never written to disk) and take precedence over env vars. `DEFAULT_OPENROUTER_KEY` and `DEFAULT_GLM_KEY` stay server-side and are exposed to the UI only as an availability flag.
 
 ### 3. Run the dev server
 
@@ -73,6 +79,7 @@ Open **Settings** (⚙ top-right of the sidebar) to select your LLM provider and
 | **OpenAI** | `gpt-4o-mini` |
 | **Claude** | `claude-haiku-4-5` |
 | **Groq** | `llama-3.3-70b-versatile` |
+| **GLM（智谱 AI）** | Configurable — `glm-5.3-flash`, `glm-5.2`, `glm-5-turbo`, `glm-4.5-flash` |
 
 ### Step 3 — Run analysis
 
@@ -239,7 +246,7 @@ lib/
   langgraph/
     graph.ts                  # Dynamic LangGraph builder from DagSpec
     nodes.ts                  # makeInsightNode factory
-    providers.ts              # LLM factory (OpenAI / Claude / Groq / OpenRouter)
+    providers.ts              # LLM factory (OpenAI / Claude / Groq / OpenRouter / GLM)
     state.ts                  # LangGraph state with dynamic outputs map
   graph-utils.ts              # ReactFlow layout (dagre) + buildInsightElements
   icon-map.ts                 # LLM icon name → LucideIcon map
@@ -257,7 +264,7 @@ types/
 |---|---|
 | Framework | Next.js 16 (App Router, Turbopack) |
 | LLM orchestration | LangGraph (`@langchain/langgraph`) |
-| LLM providers | LangChain (OpenAI, Anthropic, Groq) + OpenRouter |
+| LLM providers | LangChain (OpenAI, Anthropic, Groq) + OpenRouter + GLM |
 | Graph visualisation | ReactFlow (`@xyflow/react`) |
 | World map | react-simple-maps v3 + world-atlas |
 | DAG auto-layout | dagre |

@@ -16,7 +16,8 @@ export const PROVIDERS: {
   { id: 'claude',      label: 'Claude',       model: 'claude-haiku-4-5-20251001',       badge: 'Anthropic',   icon: '◆', keyId: 'anthropic'  },
   { id: 'openai',      label: 'GPT-4o mini',  model: 'gpt-4o-mini',                     badge: 'OpenAI',      icon: '⬡', keyId: 'openai'     },
   { id: 'groq',        label: 'Llama 3.3 70B',model: 'llama-3.3-70b-versatile',         badge: 'Groq',        icon: '▲', keyId: 'groq'       },
-  { id: 'openrouter',  label: 'OpenRouter',   model: '(pick model)',                     badge: 'OpenRouter',  icon: '◉', keyId: 'openrouter' },
+  { id: 'glm',         label: 'GLM',          model: 'glm-5.3-flash',                  badge: '智谱 AI',     icon: '✦', keyId: 'glm'        },
+  { id: 'openrouter',  label: 'OpenRouter',   model: '（选择模型）',                       badge: 'OpenRouter',  icon: '◉', keyId: 'openrouter' },
 ]
 
 export const OPENROUTER_MODELS = [
@@ -57,7 +58,7 @@ export function ProviderSelector({
               key={p.id}
               disabled={!hasKey}
               onClick={() => hasKey && onProviderChange(p.id)}
-              title={!hasKey ? 'Add key in Settings →' : p.badge}
+              title={!hasKey ? '请先在设置中填写 API Key →' : p.badge}
               className="flex items-center justify-between px-3 rounded-lg font-medium transition-all"
               style={{
                 height: 34,

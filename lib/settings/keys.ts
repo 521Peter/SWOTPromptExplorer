@@ -1,6 +1,7 @@
 import type { ApiKeys } from '@/lib/types'
 import type { Provider } from '@/lib/langgraph/providers'
 import { VALID_OPENROUTER_MODEL_IDS, DEFAULT_OPENROUTER_MODEL } from '@/constants/openrouter-models'
+import { DEFAULT_GLM_MODEL, VALID_GLM_MODEL_IDS } from '@/constants/glm-models'
 
 const STORAGE_KEY = 'swot_api_keys'
 const PROVIDER_KEY = 'swot_active_provider'
@@ -13,6 +14,7 @@ function envDefaults(): Partial<ApiKeys> {
     openai:          process.env.NEXT_PUBLIC_DEFAULT_OPENAI_KEY    ?? '',
     groq:            process.env.NEXT_PUBLIC_DEFAULT_GROQ_KEY      ?? '',
     openrouterModel: 'openai/gpt-4o-mini',
+    glmModel:        DEFAULT_GLM_MODEL,
   }
 }
 
@@ -46,6 +48,11 @@ export function loadKeys(): Partial<ApiKeys> {
         stored.openrouterModel && VALID_OPENROUTER_MODEL_IDS.has(stored.openrouterModel)
           ? stored.openrouterModel
           : DEFAULT_OPENROUTER_MODEL,
+      glm:              stored.glm            || defaults.glm,
+      glmModel:
+        stored.glmModel && VALID_GLM_MODEL_IDS.has(stored.glmModel)
+          ? stored.glmModel
+          : DEFAULT_GLM_MODEL,
     }
   } catch {
     return envDefaults()

@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SWOT Explorer",
-  description: "LLM-powered SWOT insights across customer segments",
+  title: "SWOT 洞察探索器",
+  description: "由大语言模型驱动的多客群 SWOT 与商业洞察分析",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
       <body className="h-full overflow-hidden">{children}</body>

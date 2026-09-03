@@ -30,14 +30,14 @@ export interface RunConfig {
 }
 
 const PRESET_REGIONS: Omit<RegionResult, 'pct' | 'explanation' | 'reasons' | 'status'>[] = [
-  { id: 'na',     name: 'North America', coordinates: [-98,  42], color: '#3B82F6' },
-  { id: 'eu',     name: 'Europe',        coordinates: [ 12,  52], color: '#8B5CF6' },
-  { id: 'sea',    name: 'SE Asia',       coordinates: [112,   6], color: '#10B981' },
-  { id: 'india',  name: 'India',         coordinates: [ 79,  20], color: '#F97316' },
-  { id: 'china',  name: 'China',         coordinates: [104,  35], color: '#EF4444' },
-  { id: 'latam',  name: 'Latin America', coordinates: [-58, -14], color: '#EC4899' },
-  { id: 'mena',   name: 'Middle East',   coordinates: [ 44,  26], color: '#EAB308' },
-  { id: 'africa', name: 'Africa',        coordinates: [ 20,   3], color: '#6366F1' },
+  { id: 'na',     name: '北美',   coordinates: [-98,  42], color: '#3B82F6' },
+  { id: 'eu',     name: '欧洲',   coordinates: [ 12,  52], color: '#8B5CF6' },
+  { id: 'sea',    name: '东南亚', coordinates: [112,   6], color: '#10B981' },
+  { id: 'india',  name: '印度',   coordinates: [ 79,  20], color: '#F97316' },
+  { id: 'china',  name: '中国',   coordinates: [104,  35], color: '#EF4444' },
+  { id: 'latam',  name: '拉丁美洲', coordinates: [-58, -14], color: '#EC4899' },
+  { id: 'mena',   name: '中东',   coordinates: [ 44,  26], color: '#EAB308' },
+  { id: 'africa', name: '非洲',   coordinates: [ 20,   3], color: '#6366F1' },
 ]
 
 function sessionKey(segment: string, provider: Provider) {
@@ -103,7 +103,7 @@ export function usePersona() {
             [regionId]: {
               id: regionId, name: regionName, color, coordinates,
               pct: 0, explanation: '', reasons: [], status: 'error',
-              error: err instanceof Error ? err.message : 'Failed',
+              error: err instanceof Error ? err.message : '分析失败',
             },
           },
         },

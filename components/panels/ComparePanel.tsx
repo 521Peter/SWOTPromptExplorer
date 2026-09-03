@@ -13,6 +13,7 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   openai: 'OpenAI',
   claude: 'Claude',
   groq: 'Groq',
+  glm: 'GLM',
 }
 
 interface Props {

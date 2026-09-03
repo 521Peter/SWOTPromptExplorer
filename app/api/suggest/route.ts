@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server'
-import { getLLM } from '@/lib/langgraph/providers'
-import type { Provider } from '@/lib/langgraph/providers'
+import { getLLM, getMissingProviderKeyError, resolveProviderKeys, type Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys } from '@/lib/types'
+import { parseJsonResponse } from '@/lib/langgraph/response'
 
-const PROMPT = (product: string) => `You are a business strategy assistant. Given the product below, return exactly 3 objectives and 3 customer segments in JSON.
+const PROMPT = (product: string) => `你是一名商业战略助手。根据下方产品，提供恰好 3 个业务目标和 3 个客户群体，并使用简体中文填写所有内容。
 
-Product: ${product}
+产品：${product}
 
-Rules:
-- objectives: concise marketing/business goals (under 8 words each)
-- segments: specific customer groups (2-4 words each)
-- Return ONLY valid JSON, no markdown, no explanation
+规则：
+- objectives：简洁的营销或业务目标，每项不超过 15 个汉字
+- segments：具体的客户群体，每项不超过 10 个汉字
+- 品牌名、产品名和必要的专业缩写可保留原文
+- 只返回有效 JSON，不要使用 Markdown，也不要解释
 
-Format:
+格式：
 {"objectives":["...","...","..."],"segments":["...","...","..."]}`
 
 export async function POST(req: Request) {
@@ -20,41 +21,30 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: '请求内容不是有效的 JSON' }, { status: 400 })
   }
 
   const { product, provider = 'openrouter', keys = {} } = body
-  if (!product?.trim()) return NextResponse.json({ error: 'product is required' }, { status: 400 })
+  if (!product?.trim()) return NextResponse.json({ error: '请填写产品名称' }, { status: 400 })
 
-  const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
-
-  if (provider === 'openrouter' && !effectiveKeys.openrouter) {
-    return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
-  if (provider === 'openai' && !keys?.openai) {
-    return NextResponse.json({ error: 'OpenAI API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
-  if (provider === 'claude' && !keys?.anthropic) {
-    return NextResponse.json({ error: 'Anthropic API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
-  if (provider === 'groq' && !keys?.groq) {
-    return NextResponse.json({ error: 'Groq API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
+  const effectiveKeys = resolveProviderKeys(keys)
+  const keyError = getMissingProviderKeyError(provider, effectiveKeys)
+  if (keyError) return NextResponse.json({ error: keyError }, { status: 400 })
 
   try {
-    const llm = getLLM(provider, effectiveKeys)
+    const llm = getLLM(provider, effectiveKeys, { jsonMode: true })
     const response = await llm.invoke([{ role: 'user', content: PROMPT(product.trim()) }])
-    const raw = response.content as string
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in response')
-    const parsed = JSON.parse(jsonMatch[0]) as { objectives?: string[]; segments?: string[] }
-    if (!parsed.objectives?.length || !parsed.segments?.length) throw new Error('Empty suggestions')
+    const parsed = parseJsonResponse<{ objectives?: string[]; segments?: string[] }>(
+      response.content,
+      '生成建议失败',
+    )
+    if (!parsed.objectives?.length || !parsed.segments?.length) throw new Error('模型未返回有效建议')
     return NextResponse.json({
       objectives: parsed.objectives.slice(0, 3),
       segments: parsed.segments.slice(0, 3),
     })
   } catch (err) {
-    const msg = err instanceof Error ? err.message.split('\n')[0] : 'Suggestion failed'
+    const msg = err instanceof Error ? err.message.split('\n')[0] : '生成建议失败'
     console.error('[/api/suggest] failed:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }

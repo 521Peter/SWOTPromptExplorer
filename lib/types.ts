@@ -72,4 +72,6 @@ export interface ApiKeys {
   groq: string
   openrouter: string
   openrouterModel: string
+  glm: string
+  glmModel: string
 }

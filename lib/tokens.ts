@@ -10,6 +10,7 @@ export const tokens = {
     openai: '#10B981',
     groq: '#8B5CF6',
     openrouter: '#EC4899',
+    glm: '#2563EB',
   },
 
   // Causal edge colors (ARCHITECTURE.md Section 11)

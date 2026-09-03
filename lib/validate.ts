@@ -8,8 +8,8 @@ function isGibberish(text: string): boolean {
   const t = text.trim().toLowerCase()
   if (!t) return false
 
-  // All numbers or symbols — no letters at all
-  if (/^[^a-z]+$/.test(t)) return true
+  // Chinese and other Unicode letters are valid input; reject values with no letters.
+  if (!/\p{L}/u.test(t)) return true
 
   // 5+ consecutive consonants (e.g. "strngth" is ok, "bdfghjk" is not)
   if (/[bcdfghjklmnpqrstvwxyz]{6,}/.test(t.replace(/\s/g, ''))) return true
@@ -49,27 +49,27 @@ export function validateForm(
 
   const p = product.trim()
   if (!p) {
-    errors.product = 'Product is required.'
+    errors.product = '请填写产品名称。'
   } else if (p.length < 2) {
-    errors.product = 'Product name is too short.'
+    errors.product = '产品名称太短。'
   } else if (isGibberish(p)) {
-    errors.product = 'Please enter a real product name.'
+    errors.product = '请输入有效的产品名称。'
   }
 
   const o = objective.trim()
   if (!o) {
-    errors.objective = 'Objective is required.'
+    errors.objective = '请填写分析目标。'
   } else if (o.length < 4) {
-    errors.objective = 'Objective is too short.'
+    errors.objective = '分析目标太短。'
   } else if (isGibberish(o)) {
-    errors.objective = 'Please enter a real objective.'
+    errors.objective = '请输入有效的业务目标。'
   }
 
   const badSegs = segments
     .map((s) => {
       const t = s.trim()
-      if (t.length < 2) return `"${t}" is too short`
-      if (isGibberish(t)) return `"${t}" doesn't look valid`
+      if (t.length < 2) return `“${t}”太短`
+      if (isGibberish(t)) return `“${t}”不是有效的客户群体`
       return null
     })
     .filter(Boolean) as string[]
@@ -87,18 +87,18 @@ export function validateField(field: 'product' | 'objective' | 'segment', value:
   const v = value.trim()
   if (field === 'product') {
     if (!v) return null // empty is fine until run
-    if (v.length < 2) return 'Too short.'
-    if (isGibberish(v)) return 'Doesn\'t look like a real product.'
+    if (v.length < 2) return '产品名称太短。'
+    if (isGibberish(v)) return '请输入有效的产品名称。'
   }
   if (field === 'objective') {
     if (!v) return null
-    if (v.length < 4) return 'Too short.'
-    if (isGibberish(v)) return 'Doesn\'t look like a real objective.'
+    if (v.length < 4) return '分析目标太短。'
+    if (isGibberish(v)) return '请输入有效的业务目标。'
   }
   if (field === 'segment') {
     if (!v) return null
-    if (v.length < 2) return 'Too short.'
-    if (isGibberish(v)) return 'Doesn\'t look like a valid segment.'
+    if (v.length < 2) return '客户群体名称太短。'
+    if (isGibberish(v)) return '请输入有效的客户群体。'
   }
   return null
 }

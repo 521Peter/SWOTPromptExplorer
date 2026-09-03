@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { buildInsightGraph } from '@/lib/langgraph/graph'
-import type { Provider } from '@/lib/langgraph/providers'
+import { getMissingProviderKeyError, resolveProviderKeys, type Provider } from '@/lib/langgraph/providers'
 import type { ApiKeys, DagSpec } from '@/lib/types'
 
 export async function POST(req: Request) {
@@ -16,36 +16,25 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    return NextResponse.json({ error: '请求内容不是有效的 JSON' }, { status: 400 })
   }
 
   const { product, objective, segment, provider, keys = {}, dagSpec } = body
 
   if (!product || !objective || !segment || !provider) {
     return NextResponse.json(
-      { error: 'Missing required fields: product, objective, segment, provider' },
+      { error: '缺少必填字段：product、objective、segment 或 provider' },
       { status: 400 }
     )
   }
 
   if (!dagSpec) {
-    return NextResponse.json({ error: 'dagSpec required' }, { status: 400 })
+    return NextResponse.json({ error: '缺少 dagSpec' }, { status: 400 })
   }
 
-  const effectiveKeys = { ...keys, openrouter: keys?.openrouter || process.env.DEFAULT_OPENROUTER_KEY || '' }
-
-  if (provider === 'openrouter' && !effectiveKeys.openrouter) {
-    return NextResponse.json({ error: 'OpenRouter API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
-  if (provider === 'openai' && !keys?.openai) {
-    return NextResponse.json({ error: 'OpenAI API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
-  if (provider === 'claude' && !keys?.anthropic) {
-    return NextResponse.json({ error: 'Anthropic API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
-  if (provider === 'groq' && !keys?.groq) {
-    return NextResponse.json({ error: 'Groq API key is missing. Open Settings and enter your key.' }, { status: 400 })
-  }
+  const effectiveKeys = resolveProviderKeys(keys)
+  const keyError = getMissingProviderKeyError(provider, effectiveKeys)
+  if (keyError) return NextResponse.json({ error: keyError }, { status: 400 })
 
   try {
     const graph = buildInsightGraph(provider, effectiveKeys, dagSpec)

@@ -103,10 +103,10 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         body: JSON.stringify({ product: product.trim(), provider, keys }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to fetch suggestions. Check your OpenRouter key in Settings.')
+      if (!res.ok) throw new Error(data.error ?? '获取建议失败，请检查设置中的 OpenRouter API Key。')
       setSuggestions(data as Suggestions)
     } catch (err) {
-      setSuggestError(err instanceof Error ? err.message : 'Failed to fetch suggestions.')
+      setSuggestError(err instanceof Error ? err.message : '获取建议失败。')
     } finally {
       setIsSuggesting(false)
     }
@@ -166,7 +166,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
           }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Validation failed')
+        if (!res.ok) throw new Error(data.error ?? '输入校验失败')
 
         if (!data.valid) {
           setErrors({
@@ -235,12 +235,12 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         {/* Product */}
         <SidebarSection
           error={errors.product}
-          label="Product"
+          label="产品"
           action={
             <button
               onClick={fetchSuggestions}
               disabled={!product.trim() || isSuggesting}
-              title="Suggest objectives & segments"
+              title="推荐目标和客户群体"
               className="flex items-center gap-1 rounded transition-colors disabled:opacity-30"
               style={{
                 fontSize: 10,
@@ -258,14 +258,14 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
               {isSuggesting
                 ? <Loader2 size={10} className="animate-spin" />
                 : <Sparkles size={10} />}
-              {isSuggesting ? 'Suggesting…' : 'Suggest'}
+              {isSuggesting ? '生成中…' : '智能推荐'}
             </button>
           }
         >
           <textarea
             value={product}
             onChange={(e) => { setProduct(e.target.value); setErrors((prev) => ({ ...prev, product: undefined })); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
-            placeholder="e.g. Electric Cars"
+            placeholder="例如：智能电动汽车"
             rows={1}
             className="w-full px-3 py-2 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors resize-none overflow-hidden"
             style={{
@@ -288,11 +288,11 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         </SidebarSection>
 
         {/* Objective */}
-        <SidebarSection label="Objective" error={errors.objective}>
+        <SidebarSection label="目标" error={errors.objective}>
           <textarea
             value={objective}
             onChange={(e) => { setObjective(e.target.value); setErrors((prev) => ({ ...prev, objective: undefined })); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
-            placeholder="e.g. Increase Awareness"
+            placeholder="例如：提升品牌知名度"
             rows={1}
             className="w-full px-3 py-2 rounded-lg outline-none placeholder-[#3A3A4C] transition-colors resize-none overflow-hidden"
             style={{
@@ -319,7 +319,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         </SidebarSection>
 
         {/* Segments */}
-        <SidebarSection label="Segments" error={errors.segments?.join(' · ')}>
+        <SidebarSection label="客户群体" error={errors.segments?.join(' · ')}>
           <div className="flex flex-col gap-1">
             {segments.map((seg) => (
               <div
@@ -349,7 +349,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
                     value={segmentInput}
                     onChange={(e) => { setSegmentInput(e.target.value); setSegInputError(null) }}
                     onKeyDown={handleKeyDown}
-                    placeholder="Add segment…"
+                    placeholder="添加客户群体…"
                     className="flex-1 px-2.5 rounded-md outline-none placeholder-[#3A3A4C]"
                     style={{
                       height: 30,
@@ -412,17 +412,17 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
           {isValidating ? (
             <>
               <Loader2 size={12} className="animate-spin" />
-              Validating…
+              校验中…
             </>
           ) : hasRun && !isRunning ? (
             <>
               <RotateCcw size={12} />
-              {isDirty ? 'Re-run with changes' : 'Re-run analysis'}
+              {isDirty ? '按修改重新分析' : '重新分析'}
             </>
           ) : (
             <>
               <Play size={12} fill="white" stroke="white" strokeWidth={0} />
-              Run analysis
+              开始分析
             </>
           )}
         </button>
@@ -444,7 +444,7 @@ function SuggestionChips({
   return (
     <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ fontSize: 10, color: '#4A4A5C', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-        Suggestions
+        推荐内容
       </span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {items.map((item) => {
