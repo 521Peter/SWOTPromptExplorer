@@ -13,7 +13,7 @@ export function buildInsightGraph(provider: Provider, keys: Partial<ApiKeys>, da
 
   dagSpec.nodes.forEach((node) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    graph.addNode(`node_${node.id}`, makeInsightNode(node, llm))
+    graph.addNode(`node_${node.id}`, makeInsightNode(node, llm, provider))
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     graph.addEdge(START, `node_${node.id}` as any)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
