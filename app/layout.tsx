@@ -26,6 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
+      suppressHydrationWarning
       lang="zh-CN"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
