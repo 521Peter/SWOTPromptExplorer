@@ -6,8 +6,8 @@ import { DEFAULT_GLM_MODEL, VALID_GLM_MODEL_IDS } from '@/constants/glm-models'
 const STORAGE_KEY = 'swot_api_keys'
 const PROVIDER_KEY = 'swot_active_provider'
 
-// Optional env-var defaults for keys that can safely reach the client.
-// The OpenRouter key is server-only (DEFAULT_OPENROUTER_KEY) and never included here.
+// 可安全传到客户端的密钥所使用的可选环境变量默认值。
+// OpenRouter 密钥仅供服务端使用（DEFAULT_OPENROUTER_KEY），绝不会包含在这里。
 function envDefaults(): Partial<ApiKeys> {
   return {
     anthropic:       process.env.NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY ?? '',
@@ -37,7 +37,7 @@ export function loadKeys(): Partial<ApiKeys> {
   if (typeof window === 'undefined') return envDefaults()
   try {
     const stored = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}') as Partial<ApiKeys>
-    // Merge: stored keys take precedence over env defaults
+    // 合并时，已存储的密钥优先于环境变量默认值
     const defaults = envDefaults()
     return {
       anthropic:       stored.anthropic      || defaults.anthropic,

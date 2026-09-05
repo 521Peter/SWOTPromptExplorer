@@ -167,7 +167,7 @@ export function useInsights() {
       const session = sessions.current[key]
       if (!session?.dagSpec) return
 
-      // Merge new nodes/edges, skip duplicates by id
+      // 合并新节点和边，并按 ID 跳过重复项
       const existingNodeIds = new Set(session.dagSpec.nodes.map((n) => n.id))
       const newNodes = additions.nodes.filter((n) => !existingNodeIds.has(n.id))
       const existingEdgeIds = new Set(session.dagSpec.edges.map((e) => `${e.from}-${e.to}`))
@@ -183,7 +183,7 @@ export function useInsights() {
       sessions.current[key] = { ...session, dagSpec: updatedSpec }
       forceUpdate((n) => n + 1)
 
-      // Run only the new nodes
+      // 只运行新节点
       const singleNodeSpec = { nodes: newNodes, edges: [] }
       try {
         const res = await fetch('/api/insights', {
@@ -242,7 +242,7 @@ export function useInsights() {
       const node = session.dagSpec.nodes.find((n) => n.id === nodeId)
       if (!node) return
 
-      // Mark just this node as loading in the insights map
+      // 仅在洞察映射中将当前节点标记为加载中
       sessions.current[key] = {
         ...session,
         insights: { ...(session.insights ?? {}), [nodeId]: '' },
@@ -278,7 +278,7 @@ export function useInsights() {
           staleNodeIds: updatedStale,
         }
       } catch {
-        // restore previous content on error
+        // 出错时恢复之前的内容
         const cur = sessions.current[key]
         sessions.current[key] = {
           ...cur,

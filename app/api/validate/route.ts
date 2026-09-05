@@ -39,7 +39,7 @@ async function callModel(model: string, product: string, objective: string, segm
   if (!res.ok) {
     const text = await res.text()
     let msg = `OpenRouter ${res.status}`
-    try { msg = JSON.parse(text)?.error?.message ?? msg } catch { /* ignore */ }
+    try { msg = JSON.parse(text)?.error?.message ?? msg } catch { /* 忽略 */ }
     throw new Error(msg)
   }
   const data = await res.json()
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 
   if (!result) return NextResponse.json({ error: lastError }, { status: 500 })
 
-  // Build field-level errors — anything not "ok" is an error message
+  // 构建字段级错误；任何非“ok”的内容都视为错误消息
   const errors: { product?: string; objective?: string; segments?: string[] } = {}
   if (product !== '__trusted__' && result.product && result.product !== 'ok')
     errors.product = `“${product}”不像有效产品，请输入真实的产品名称。`

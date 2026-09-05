@@ -32,14 +32,14 @@ npm install
 Provide default keys via environment variables so the app works without the Settings panel:
 
 ```bash
-# .env.local — server-only shared defaults
+# .env.local——仅供服务端使用的共享默认值
 DEFAULT_OPENROUTER_KEY=sk-or-...
 DEFAULT_GLM_KEY=your-zhipu-api-key
 DEFAULT_GLM_MODEL=glm-5.3-flash
-# Optional; switch to /api/coding/paas/v4 only for a GLM Coding Plan key
+# 可选；仅在使用 GLM Coding Plan 密钥时切换到 /api/coding/paas/v4
 DEFAULT_GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
 
-# Optional browser-visible defaults for the other providers
+# 其他服务商可选的浏览器可见默认值
 NEXT_PUBLIC_DEFAULT_OPENAI_KEY=sk-...
 NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY=sk-ant-...
 NEXT_PUBLIC_DEFAULT_GROQ_KEY=gsk_...

@@ -52,7 +52,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges] = useEdgesState<Edge>([])
 
-  // Rebuild layout only when dagSpec changes (preserves drag positions across session updates)
+  // 仅在 dagSpec 变化时重建布局（在会话更新之间保留拖拽后的位置）
   useEffect(() => {
     if (!dagSpec) { setNodes([]); setEdges([]); return }
 
@@ -87,7 +87,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dagSpec, segment])
 
-  // Update only data fields when session changes — never touch positions
+  // 会话变化时只更新数据字段，绝不改动位置
   useEffect(() => {
     const segmentStatus =
       session.status === 'planning' ? 'planning' :
@@ -123,7 +123,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
-  // Update selected state without touching positions
+  // 更新选中状态，但不改动位置
   useEffect(() => {
     setNodes((prev) =>
       prev.map((n) => {
@@ -151,7 +151,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
 
   return (
     <div className="h-full flex flex-col" style={{ background: '#0A0A0F', position: 'relative' }}>
-      {/* Planning overlay — shown while /api/plan is in flight */}
+      {/* 规划遮罩层：/api/plan 请求进行中时显示 */}
       {session.status === 'planning' && (
         <div
           className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3"
@@ -163,7 +163,7 @@ export function InsightDAG({ product, objective, segment, provider, session, dag
         </div>
       )}
 
-      {/* Floating Regional Fit pill */}
+      {/* 浮动的地区匹配度胶囊标签 */}
       {session.status === 'ready' && onRunPersona && (
         <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
           <button

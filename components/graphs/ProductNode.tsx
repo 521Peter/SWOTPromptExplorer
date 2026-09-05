@@ -30,7 +30,7 @@ function ProductNodeComponent({ data }: NodeProps) {
         position: 'relative',
       }}
     >
-      {/* Glow accent */}
+      {/* 发光强调效果 */}
       <div
         style={{
           position: 'absolute',
@@ -41,7 +41,7 @@ function ProductNodeComponent({ data }: NodeProps) {
         }}
       />
 
-      {/* Label */}
+      {/* 标签 */}
       <div
         style={{
           fontSize: 15,
@@ -54,7 +54,7 @@ function ProductNodeComponent({ data }: NodeProps) {
         {d.label}
       </div>
 
-      {/* Objective pill */}
+      {/* 目标胶囊标签 */}
       {d.objective && (
         <div
           style={{

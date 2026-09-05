@@ -50,7 +50,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
   return (
     <div style={{ background: '#06060C', height: '100%', overflow: 'hidden', position: 'relative' }}>
 
-      {/* Zoom controls — match ReactFlow Controls default white style */}
+      {/* 缩放控件：与 ReactFlow 控件的默认白色样式保持一致 */}
       <div style={{
         position: 'absolute', bottom: 15, left: 15, zIndex: 10,
         display: 'flex', flexDirection: 'column',
@@ -115,7 +115,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
             const isHov = hovered === region.id
             const isSel = selectedRegionId === region.id
             const isLoad = region.status === 'loading'
-            // Scale marker inversely with zoom so rings stay constant screen size
+            // 标记随缩放比例反向缩放，使圆环在屏幕上的尺寸保持不变
             const markerScale = 1 / Math.max(1, zoom * 0.8)
             const r = isLoad ? MIN_R : ringRadius(region.pct)
             const circ = 2 * Math.PI * r
@@ -185,7 +185,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
                       )}
                     </>
                   )}
-                  {/* Stable hit area — keeps hover events regardless of tooltip appearing */}
+                  {/* 稳定的命中区域，确保提示框出现与否都不影响悬停事件 */}
                   <circle
                     cx={0} cy={0}
                     r={isLoad ? MIN_R + 4 : r + 6}
@@ -201,7 +201,7 @@ export function WorldPersonaMap({ regions, onAddRegion, onRegionClick, selectedR
           })}
         </ZoomableGroup>
       </ComposableMap>
-      {/* Bottom strip — add custom region */}
+      {/* 底栏：添加自定义地区 */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
         background: 'rgba(6,6,12,0.82)', borderTop: '1px solid #1A1A28',

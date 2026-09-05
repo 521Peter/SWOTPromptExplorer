@@ -1,6 +1,6 @@
 /**
- * End-to-end test for the /api/insights route using OpenRouter.
- * Run from the project root while `npm run dev` is running:
+ * 使用 OpenRouter 对 /api/insights 路由进行端到端测试。
+ * 运行 `npm run dev` 后，在项目根目录执行：
  *   node scripts/test-openrouter.mjs
  */
 
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// Load key from .env.local
+// 从 .env.local 加载密钥
 function loadKey() {
   try {
     const env = readFileSync(resolve(__dirname, '../.env.local'), 'utf8')

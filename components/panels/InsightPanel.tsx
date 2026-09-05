@@ -42,7 +42,7 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
         overflow: 'hidden',
       }}
     >
-      {/* Header */}
+      {/* 页头 */}
       <div
         style={{
           padding: '16px 20px',
@@ -74,7 +74,7 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
         )}
       </div>
 
-      {/* Analysis focus */}
+      {/* 分析重点 */}
       {nodeMeta?.prompt && (
         <div style={{
           margin: '12px 20px 0',
@@ -94,7 +94,7 @@ export function InsightPanel({ promptKey, dagSpec, content, onClose }: Props) {
         </div>
       )}
 
-      {/* Content */}
+      {/* 内容 */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <div className="px-5 pt-5 pb-12 prose prose-invert prose-sm max-w-none">
           {content ? (

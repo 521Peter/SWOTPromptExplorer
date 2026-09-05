@@ -65,7 +65,7 @@ export function buildInsightElements(
   dagSpec: DagSpec,
   existingPositions?: Map<string, { x: number; y: number }>
 ): { nodes: Node[]; edges: Edge[]; rootIds: string[] } {
-  // Determine the lowest y among already-positioned nodes so new ones appear below
+  // 找出已定位节点中的最低 y 坐标，使新节点显示在其下方
   let baseY = 0
   if (existingPositions && existingPositions.size > 0) {
     baseY = Math.max(...Array.from(existingPositions.values()).map((p) => p.y)) + NODE_H + 80

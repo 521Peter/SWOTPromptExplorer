@@ -137,7 +137,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
           boxShadow: open ? '-8px 0 32px rgba(0,0,0,0.5)' : 'none',
         }}
       >
-        {/* Header */}
+        {/* 页头 */}
         <div className="flex items-center justify-between px-5" style={{ height: 56, borderBottom: '1px solid #1E1E2E', flexShrink: 0 }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 14, color: '#D0D0DC', letterSpacing: '-0.2px' }}>设置</div>
@@ -154,13 +154,13 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
           </button>
         </div>
 
-        {/* Body */}
+        {/* 主体 */}
         <div className="flex flex-col gap-1 px-4 py-4 flex-1 overflow-y-auto">
           <p style={{ fontSize: 12, color: '#5A5A6C', lineHeight: 1.6, marginBottom: 12 }}>
             默认使用 OpenRouter。填写其他模型服务商的 API Key 后即可切换。
           </p>
 
-          {/* OpenRouter — key input + env fallback */}
+          {/* OpenRouter：密钥输入和环境变量回退 */}
           <div
             className="flex flex-col rounded-xl mb-2"
             style={{
@@ -230,7 +230,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
             </div>
           </div>
 
-          {/* GLM — OpenAI-compatible Zhipu API with selectable model */}
+          {/* GLM：兼容 OpenAI、支持模型选择的智谱 API */}
           <div
             className="flex flex-col rounded-xl mb-2"
             style={{
@@ -308,7 +308,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
             </div>
           </div>
 
-          {/* Other providers with key inputs */}
+          {/* 其他带密钥输入框的服务商 */}
           {OTHER_PROVIDERS.map((p) => {
             const hasKey = !!keys[p.keyId]
             const isActive = provider === p.id
@@ -386,7 +386,7 @@ export function SettingsPanel({ provider, onProviderChange }: Props) {
           })}
         </div>
 
-        {/* Footer */}
+        {/* 页脚 */}
         <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderTop: '1px solid #1E1E2E', flexShrink: 0 }}>
           <button
             onClick={handleSave}

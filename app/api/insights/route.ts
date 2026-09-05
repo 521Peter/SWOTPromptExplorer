@@ -59,7 +59,7 @@ function extractMessage(err: unknown): string {
       const parsed = JSON.parse(jsonMatch[0])
       if (parsed?.error?.message) return parsed.error.message
       if (parsed?.message) return parsed.message
-    } catch { /* not valid JSON, fall through */ }
+    } catch { /* 不是有效的 JSON，继续执行后续逻辑 */ }
   }
   return raw.split('\n')[0].replace(/\s*Troubleshooting URL:.*$/, '').trim()
 }

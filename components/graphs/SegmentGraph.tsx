@@ -36,7 +36,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges] = useEdgesState<Edge>([])
 
-  // Rebuild layout only when segments list changes — preserves drag positions
+  // 仅在细分市场列表变化时重建布局，以保留拖拽后的位置
   useEffect(() => {
     const productNode: Node = {
       id: PRODUCT_ID,
@@ -61,7 +61,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [segments.join(','), product, objective, provider])
 
-  // Update only data fields on tick — never touch positions
+  // 定时更新时只修改数据字段，绝不改动位置
   useEffect(() => {
     setNodes((prev) =>
       prev.map((n) => {
@@ -125,7 +125,7 @@ export function SegmentGraph({ product, objective, segments, provider, getSessio
         <Controls />
       </ReactFlow>
 
-      {/* Bottom hint */}
+      {/* 底部提示 */}
       <div
         style={{
           position: 'absolute',

@@ -72,7 +72,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         transition: 'border-color 0.25s ease, box-shadow 0.3s ease, opacity 0.3s ease',
       }}
     >
-      {/* Row 1: label */}
+      {/* 第一行：标签 */}
       <div
         style={{
           display: 'flex',
@@ -96,7 +96,7 @@ function SegmentNodeComponent({ data, selected }: NodeProps) {
         {d.label}
       </div>
 
-      {/* Row 2: status */}
+      {/* 第二行：状态 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {(d.status === 'loading' || d.status === 'planning') && (
           <span

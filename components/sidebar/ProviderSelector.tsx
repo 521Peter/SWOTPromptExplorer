@@ -46,7 +46,7 @@ export function ProviderSelector({
 }: Props) {
   return (
     <div className="flex flex-col gap-2">
-      {/* Segmented button group */}
+      {/* 分段按钮组 */}
       <div className="flex flex-col gap-1">
         {PROVIDERS.map((p) => {
           const hasKey = !!keys[p.keyId]
@@ -89,7 +89,7 @@ export function ProviderSelector({
         })}
       </div>
 
-      {/* OpenRouter model picker — only shown when openrouter is selected */}
+      {/* OpenRouter 模型选择器，仅在选中 OpenRouter 时显示 */}
       {activeProvider === 'openrouter' && keys.openrouter && (
         <div className="relative">
           <select

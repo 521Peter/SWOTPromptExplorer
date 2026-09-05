@@ -43,7 +43,7 @@ function InsightColumn({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Column header */}
+      {/* 列标题 */}
       <div
         className="flex items-center gap-2 px-4 py-2.5 flex-shrink-0"
         style={{ borderBottom: '1px solid #1E1E2E', background: `${color}08` }}
@@ -60,7 +60,7 @@ function InsightColumn({
         )}
       </div>
 
-      {/* Content */}
+      {/* 内容 */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {content ? (
           <div
@@ -96,7 +96,7 @@ export function ComparePanel({
 
   return (
     <div className="h-full flex flex-col" style={{ background: '#0D0D14' }}>
-      {/* Toolbar */}
+      {/* 工具栏 */}
       <div
         className="flex items-center justify-between px-4 flex-shrink-0"
         style={{ height: 44, borderBottom: '1px solid #1E1E2E' }}
@@ -107,7 +107,7 @@ export function ComparePanel({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Right-side provider picker */}
+          {/* 右侧服务商选择器 */}
           <div className="flex items-center gap-1.5">
             <span style={{ fontSize: 11, color: '#5A5A6C' }}>对比</span>
             <select
@@ -143,7 +143,7 @@ export function ComparePanel({
         </div>
       </div>
 
-      {/* Two-column body */}
+      {/* 双栏主体 */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden" style={{ borderRight: '1px solid #1E1E2E' }}>
           <InsightColumn

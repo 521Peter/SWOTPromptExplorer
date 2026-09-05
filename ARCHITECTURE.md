@@ -79,13 +79,13 @@ This is the core architectural decision. Each of the 9 prompt types is a **node*
 import { Annotation } from '@langchain/langgraph'
 
 export const InsightState = Annotation.Root({
-  // Input
+  // 输入
   product:   Annotation<string>(),
   objective: Annotation<string>(),
   segment:   Annotation<string>(),
   provider:  Annotation<'openai' | 'claude' | 'groq'>(),
 
-  // Output — each node writes its key
+  // 输出：每个节点写入自己的键
   marketingOKRs:           Annotation<string>(),
   strengths:               Annotation<string>(),
   weaknesses:              Annotation<string>(),
@@ -108,21 +108,21 @@ import { makeInsightNode } from './nodes'
 import { PROMPT_CONFIG } from '@/constants/prompt-config'
 
 export function buildInsightGraph(provider: string) {
-  const llm = getLLM(provider)  // returns ChatOpenAI | ChatAnthropic | ChatGroq
+  const llm = getLLM(provider)  // 返回 ChatOpenAI | ChatAnthropic | ChatGroq
   const graph = new StateGraph(InsightState)
 
-  // Register a node for each prompt type
+  // 为每种提示词类型注册一个节点
   const promptKeys = Object.keys(PROMPT_CONFIG)
   promptKeys.forEach(key => {
     graph.addNode(key, makeInsightNode(key, llm))
   })
 
-  // START fans out to all nodes in parallel
+  // START 并行分支到所有节点
   promptKeys.forEach(key => {
     graph.addEdge(START, key as any)
   })
 
-  // All nodes fan back to END
+  // 所有节点汇聚回 END
   promptKeys.forEach(key => {
     graph.addEdge(key as any, END)
   })
@@ -247,7 +247,7 @@ export async function POST(req: Request) {
     provider,
   })
 
-  // result contains all 9 keys written by parallel nodes
+  // result 包含并行节点写入的全部 9 个键
   const { product: _, objective: __, segment: ___, provider: ____, ...insights } = result
 
   return Response.json({ segment, provider, insights })
@@ -356,8 +356,8 @@ interface SegmentSession {
   generatedAt: Date | null
 }
 
-// Cache key = `${segmentName}:${provider}`
-// Allows same segment to be cached for multiple providers
+// 缓存键 = `${segmentName}:${provider}`
+// 允许同一细分市场针对多个服务商分别缓存
 const sessions = useRef<Record<string, SegmentSession>>({})
 
 // hooks/useGraphState.ts
@@ -476,7 +476,7 @@ npm install @xyflow/react dagre framer-motion react-markdown lucide-react
 npx shadcn-ui@latest init
 
 vercel --prod
-# Set in Vercel dashboard:
+# 在 Vercel 控制台中设置：
 # ANTHROPIC_API_KEY, OPENAI_API_KEY, GROQ_API_KEY
 ```
 
@@ -527,7 +527,7 @@ vercel --prod
 OpenRouter is added as a fourth provider. It proxies 100+ models (GPT-4o, Claude, Gemini, Mistral, etc.) through a single OpenAI-compatible endpoint — meaning LangChain's `ChatOpenAI` works with just a `baseURL` swap.
 
 ```typescript
-// lib/langgraph/providers.ts — updated
+// lib/langgraph/providers.ts——已更新
 import { ChatOpenAI }    from '@langchain/openai'
 import { ChatAnthropic } from '@langchain/anthropic'
 import { ChatGroq }      from '@langchain/groq'
@@ -558,7 +558,7 @@ export function getLLM(provider: Provider, keys: ApiKeys) {
         apiKey:      keys.groq,
       })
     case 'openrouter':
-      // OpenRouter is OpenAI-compatible — just swap baseURL + key
+      // OpenRouter 兼容 OpenAI，只需替换 baseURL 和密钥
       return new ChatOpenAI({
         model:        keys.openrouterModel || 'mistralai/mistral-7b-instruct',
         temperature:   0.7,
@@ -579,7 +579,7 @@ export function getLLM(provider: Provider, keys: ApiKeys) {
 **OpenRouter model picker:** When provider is `openrouter`, a second dropdown appears in the sidebar letting users pick any model. Populate the list from OpenRouter's `/api/v1/models` endpoint on settings open.
 
 ```typescript
-// Popular OpenRouter models to pre-populate
+// 用于预填充的热门 OpenRouter 模型
 export const OPENROUTER_MODELS = [
   { id: 'mistralai/mistral-7b-instruct',       label: 'Mistral 7B' },
   { id: 'meta-llama/llama-3.1-8b-instruct',    label: 'Llama 3.1 8B' },
@@ -632,17 +632,17 @@ export function clearKeys() {
 Keys are passed in the POST body alongside the prompt config. The API route reads them from the request body and passes them into `getLLM()` — they are **never stored server-side**, never logged.
 
 ```typescript
-// POST body shape — updated
+// POST 请求体结构——已更新
 {
   product:         string
   objective:       string
   segment:         string
   provider:        Provider
-  keys:            ApiKeys          // ← passed from client localStorage
-  openrouterModel?: string          // ← only when provider = 'openrouter'
+  keys:            ApiKeys          // ← 从客户端 localStorage 传入
+  openrouterModel?: string          // ← 仅当 provider = 'openrouter' 时使用
 }
 
-// app/api/insights/route.ts — updated
+// app/api/insights/route.ts——已更新
 export async function POST(req: Request) {
   const { product, objective, segment, provider, keys, openrouterModel } = await req.json()
   const graph = buildInsightGraph(provider, { ...keys, openrouterModel })
@@ -777,7 +777,7 @@ export const PROVIDERS = [
     model:  'claude-haiku-4-5-20251001',
     badge:  'Anthropic',
     color:  '#D97706',
-    keyId:  'anthropic',      // which key from ApiKeys to check
+    keyId:  'anthropic',      // 要检查 ApiKeys 中的哪个密钥
   },
   {
     id:     'openai',
@@ -817,7 +817,7 @@ With the settings panel approach, **no `.env` is required** for the reviewer.
 For production/self-hosting, keys can optionally be set as environment variables as fallbacks:
 
 ```env
-# Optional — if set, pre-fills the settings panel
+# 可选——设置后会预填充设置面板
 NEXT_PUBLIC_DEFAULT_ANTHROPIC_KEY=sk-ant-...
 NEXT_PUBLIC_DEFAULT_OPENAI_KEY=sk-...
 NEXT_PUBLIC_DEFAULT_GROQ_KEY=gsk_...
@@ -844,4 +844,3 @@ The reviewer can override with their own keys in the Settings panel.
 - [ ] InsightPanel slides in with markdown on node click
 - [ ] Segment node badge shows provider used
 - [ ] Deployed live on Vercel
-

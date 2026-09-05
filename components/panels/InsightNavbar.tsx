@@ -32,7 +32,7 @@ export function InsightNavbar({
       padding: '0 14px', height: 38, flexShrink: 0,
       background: '#080810', borderBottom: '1px solid #1E1E2E',
     }}>
-      {/* Back */}
+      {/* 返回 */}
       <button
         onClick={onBack}
         style={{ ...btnBase, border: 'none', padding: '3px 6px', color: '#4A4A5E', fontSize: 12 }}
@@ -45,7 +45,7 @@ export function InsightNavbar({
 
       <div style={{ width: 1, height: 16, background: '#1C1C2A', flexShrink: 0 }} />
 
-      {/* Breadcrumb */}
+      {/* 面包屑导航 */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, overflow: 'hidden' }}>
         <span style={{ color: '#6A6A88', fontSize: 11, fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {product || '产品'}
@@ -56,7 +56,7 @@ export function InsightNavbar({
         </span>
       </div>
 
-      {/* Compare */}
+      {/* 对比 */}
       {availableProviders.length > 1 && (
         <button
           onClick={onCompare}

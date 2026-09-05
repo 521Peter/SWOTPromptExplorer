@@ -135,13 +135,13 @@
     @apply font-sans;
   }
 
-  /* ReactFlow canvas override — prevent white flash */
+  /* 覆盖 ReactFlow 画布样式，防止白屏闪烁 */
   .react-flow__renderer,
   .react-flow__container {
     background: #0A0A0F !important;
   }
 
-  /* ReactFlow Controls — dark theme via CSS variables (v12 API) */
+  /* ReactFlow 控件：通过 CSS 变量启用深色主题（v12 API） */
   :root {
     --xy-controls-button-background-color-default: #13131A;
     --xy-controls-button-background-color-hover-default: #1B1B26;
@@ -168,7 +168,7 @@
   }
 
 
-  /* Scrollbar styling for dark panels */
+  /* 深色面板的滚动条样式 */
   ::-webkit-scrollbar {
     width: 4px;
     height: 4px;

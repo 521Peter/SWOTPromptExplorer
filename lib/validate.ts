@@ -8,23 +8,23 @@ function isGibberish(text: string): boolean {
   const t = text.trim().toLowerCase()
   if (!t) return false
 
-  // Chinese and other Unicode letters are valid input; reject values with no letters.
+  // 中文及其他 Unicode 字母均为有效输入；拒绝不含任何字母的值。
   if (!/\p{L}/u.test(t)) return true
 
-  // 5+ consecutive consonants (e.g. "strngth" is ok, "bdfghjk" is not)
+  // 连续出现 5 个以上辅音（例如“strngth”可以，“bdfghjk”不可以）
   if (/[bcdfghjklmnpqrstvwxyz]{6,}/.test(t.replace(/\s/g, ''))) return true
 
-  // Single keyboard row mash longer than 4 chars
+  // 同一键盘行上连续乱按超过 4 个字符
   const noSpace = t.replace(/\s/g, '')
   if (noSpace.length > 4 && KEYBOARD_ROWS.some((r) => r.test(noSpace))) return true
 
-  // Repeated character (e.g. "aaaaa", "hhhhhh")
+  // 重复字符（例如“aaaaa”“hhhhhh”）
   if (/(.)\1{4,}/.test(t)) return true
 
-  // Repeating short pattern (e.g. "ososos", "ababab", "xoxoxo")
+  // 重复的短模式（例如“ososos”“ababab”“xoxoxo”）
   if (/^(.{1,3})\1{2,}$/.test(noSpace) && noSpace.length >= 4) return true
 
-  // Vowel ratio check for longer inputs — real words are ~20–60% vowels
+  // 对较长输入检查元音比例，真实单词中的元音通常约占 20%～60%
   const letters = t.replace(/[^a-z]/g, '')
   if (letters.length >= 7) {
     const vowelRatio = (letters.match(/[aeiou]/g) ?? []).length / letters.length
@@ -86,7 +86,7 @@ export function hasErrors(e: ValidationErrors) {
 export function validateField(field: 'product' | 'objective' | 'segment', value: string): string | null {
   const v = value.trim()
   if (field === 'product') {
-    if (!v) return null // empty is fine until run
+    if (!v) return null // 运行前允许为空
     if (v.length < 2) return '产品名称太短。'
     if (isGibberish(v)) return '请输入有效的产品名称。'
   }

@@ -106,7 +106,7 @@ export async function POST(req: Request) {
   const llm = getLLM(provider, effectiveKeys, { jsonMode: true })
   const userPrompt = buildUserPrompt(product, objective, segment)
 
-  // Try up to 2 times — LLMs occasionally emit slightly malformed JSON
+  // 最多尝试 2 次，因为大模型偶尔会输出格式略有问题的 JSON
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const response = await llm.invoke([

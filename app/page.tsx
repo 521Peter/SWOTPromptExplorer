@@ -94,7 +94,7 @@ export default function Home() {
     runAll(config.segments, { ...config, force: config.force });
   }
 
-  // Mark sessions stale when inputs change after they were run
+  // 运行后输入发生变化时，将会话标记为已过期
   useEffect(() => {
     segments.forEach((seg) => {
       const s = getSession(seg, state.provider)
@@ -129,7 +129,7 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showChat])
 
-  // Clear region selection when segment or provider changes
+  // 细分市场或服务商变化时清除地区选择
   useEffect(() => {
     setSelectedRegion(null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,7 +159,7 @@ export default function Home() {
       className="h-full"
       style={{ background: "#0A0A0F" }}
     >
-      {/* Sidebar */}
+      {/* 侧边栏 */}
       <ResizablePanel
         defaultSize={22}
         minSize={18}
@@ -178,13 +178,13 @@ export default function Home() {
         className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
       />
 
-      {/* Main */}
+      {/* 主体 */}
       <ResizablePanel defaultSize={84}>
         <div
           className="h-full flex overflow-hidden relative"
           style={{ background: "#0A0A0F" }}
         >
-          {/* Error alerts */}
+          {/* 错误提示 */}
           <AnimatePresence>
             {errors.length > 0 && (
               <motion.div
@@ -267,7 +267,7 @@ export default function Home() {
             )}
           </AnimatePresence>
 
-          {/* Views */}
+          {/* 视图 */}
           <AnimatePresence mode="wait">
             {state.activeLayer === "insight" &&
             state.activeSegment &&
@@ -289,14 +289,14 @@ export default function Home() {
                   isComparing={isComparing}
                   onCompare={() => setIsComparing(true)}
                 />
-                {/* Outer split: Left (DAG + Map + Chat) | Detail */}
+                {/* 外层分栏：左侧（DAG + 地图 + 对话）| 详情 */}
                 <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
 
-                  {/* Left column: maps on top, resizable chat below */}
+                  {/* 左栏：上方为地图，下方为可调整大小的对话区 */}
                   <ResizablePanel defaultSize={72} minSize={40}>
                     <ResizablePanelGroup direction="vertical" className="h-full">
 
-                      {/* Maps row */}
+                      {/* 地图行 */}
                       <ResizablePanel defaultSize={75} minSize={35}>
                         <ResizablePanelGroup
                           key={showPersonaMap ? 'maps-two' : 'maps-one'}
@@ -346,12 +346,12 @@ export default function Home() {
                         </ResizablePanelGroup>
                       </ResizablePanel>
 
-                      {/* Resize handle — visible only when chat is open */}
+                      {/* 调整大小的手柄，仅在对话区打开时显示 */}
                       <ResizableHandle
                         className={`h-px transition-colors data-[resize-handle-active]:bg-[#534AB7] ${showChat ? 'bg-[#1E1E2E] hover:bg-[#534AB7]' : 'bg-transparent pointer-events-none'}`}
                       />
 
-                      {/* Chat — collapsible, never unmounts so expand/collapse is smooth */}
+                      {/* 对话区：可折叠且始终保持挂载，使展开和收起更流畅 */}
                       <ResizablePanel
                         ref={chatPanelRef}
                         defaultSize={25}
@@ -398,7 +398,7 @@ export default function Home() {
                     className="w-px bg-[#1E1E2E] hover:bg-[#534AB7] transition-colors data-[resize-handle-active]:bg-[#534AB7]"
                   />
 
-                  {/* Detail panel — full height, not affected by chat */}
+                  {/* 详情面板：占满高度，不受对话区影响 */}
                   <ResizablePanel defaultSize={28} minSize={15} maxSize={55}>
                     {selectedRegion ? (
                       <RegionDetailPanel

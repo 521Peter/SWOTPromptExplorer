@@ -46,7 +46,7 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
         position: 'relative',
       }}
     >
-      {/* Icon */}
+      {/* 图标 */}
       <div style={{ flexShrink: 0, color: d.color }}>
         {d.status === 'loading' ? (
           <span
@@ -58,7 +58,7 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
         )}
       </div>
 
-      {/* Label */}
+      {/* 标签 */}
       <span
         style={{
           fontSize: 12,
@@ -71,7 +71,7 @@ function InsightNodeComponent({ data, selected }: NodeProps) {
         {d.label}
       </span>
 
-      {/* Stale badge */}
+      {/* 已过期徽标 */}
       {d.stale ? (
         <span style={{ color: '#F59E0B', flexShrink: 0, display: 'flex' }}>
           <AlertTriangle size={13} />

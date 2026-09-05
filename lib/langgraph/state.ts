@@ -2,7 +2,7 @@ import { Annotation } from '@langchain/langgraph'
 import type { DagSpec } from '@/lib/types'
 
 export const InsightState = Annotation.Root({
-  // Inputs
+  // 输入
   product:   Annotation<string>(),
   objective: Annotation<string>(),
   segment:   Annotation<string>(),
@@ -12,7 +12,7 @@ export const InsightState = Annotation.Root({
     default: () => null,
   }),
 
-  // Dynamic outputs — each node merges its key into this map
+  // 动态输出：每个节点都将自己的键合并到此映射中
   outputs: Annotation<Record<string, string>>({
     reducer: (prev, next) => ({ ...prev, ...next }),
     default: () => ({}),

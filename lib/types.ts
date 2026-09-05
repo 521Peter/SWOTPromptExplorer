@@ -50,8 +50,8 @@ export interface DagSpec {
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
-  additions?: { nodes: DagNode[]; edges: DagEdge[] }  // suggested node from assistant
-  addedToGraph?: boolean                               // true once user clicks "Add to graph"
+  additions?: { nodes: DagNode[]; edges: DagEdge[] }  // 助手建议添加的节点
+  addedToGraph?: boolean                               // 用户点击“添加到图谱”后为 true
 }
 
 export interface SegmentSession {

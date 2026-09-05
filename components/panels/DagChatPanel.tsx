@@ -45,7 +45,7 @@ function NodePreviewCard({
         gap: 8,
       }}
     >
-      {/* Icon + label */}
+      {/* 图标和标签 */}
       <span style={{ color: node.color, flexShrink: 0 }}>
         <Icon size={13} />
       </span>
@@ -53,7 +53,7 @@ function NodePreviewCard({
         {node.label}
       </span>
 
-      {/* Add to graph button */}
+      {/* 添加到图谱按钮 */}
       {added ? (
         <span
           style={{
@@ -172,7 +172,7 @@ export function DagChatPanel({
       className="h-full flex flex-col"
       style={{ background: '#0D0D14', borderTop: '0.5px solid #1E1E2E' }}
     >
-      {/* Header */}
+      {/* 页头 */}
       <div
         style={{
           display: 'flex',
@@ -207,7 +207,7 @@ export function DagChatPanel({
         )}
       </div>
 
-      {/* Message history */}
+      {/* 消息历史 */}
       <div
         ref={scrollRef}
         style={{
@@ -228,7 +228,7 @@ export function DagChatPanel({
 
         {history.map((msg, i) => (
           <div key={i}>
-            {/* Message bubble */}
+            {/* 消息气泡 */}
             <div
               style={{
                 display: 'flex',
@@ -250,7 +250,7 @@ export function DagChatPanel({
               </div>
             </div>
 
-            {/* Node preview card — only on assistant messages with suggestions */}
+            {/* 节点预览卡片，仅用于包含建议的助手消息 */}
             {msg.role === 'assistant' && msg.additions?.nodes.length ? (
               <NodePreviewCard
                 additions={msg.additions}
@@ -268,7 +268,7 @@ export function DagChatPanel({
         )}
       </div>
 
-      {/* Input row */}
+      {/* 输入行 */}
       <div
         style={{
           display: 'flex',

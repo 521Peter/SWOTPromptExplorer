@@ -42,7 +42,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   const [segInputError, setSegInputError] = useState<string | null>(null)
   const [isValidating, setIsValidating] = useState(false)
   const lastRun = useRef<{ product: string; objective: string; segments: string[] } | null>(null)
-  // Values that came from AI suggestions are already trusted — skip validation for them
+  // AI 建议生成的值已被信任，无需再次验证
   const trustedValues = useRef<Set<string>>(new Set())
 
   useEffect(() => {
@@ -52,13 +52,13 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Clear suggestions when product changes
+  // 产品变化时清空建议
   useEffect(() => {
     setSuggestions(null)
     setSuggestError(null)
   }, [product])
 
-  // Mark dirty whenever form changes after a run
+  // 运行后表单一旦变化，就标记为已修改
   useEffect(() => {
     if (!lastRun.current) return
     const snap = lastRun.current
@@ -85,7 +85,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
     try {
       const keys = loadKeys()
 
-      // Validate product before suggesting
+      // 生成建议前先验证产品
       const valRes = await fetch('/api/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,7 +115,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   function addSegment(name?: string) {
     const trimmed = (name ?? segmentInput).trim()
     if (!trimmed || segments.includes(trimmed) || segments.length >= 6) return
-    // Only validate manually typed segments — suggestion-sourced ones are trusted
+    // 只验证手动输入的细分市场；来自建议的内容已被信任
     if (!name) {
       const err = validateField('segment', trimmed)
       if (err) { setSegInputError(err); return }
@@ -140,12 +140,12 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
   async function handleRun() {
     if (!canRun || isValidating) return
 
-    // Fast local check first
+    // 先进行快速本地检查
     const localErrs = validateForm(product, objective, segments)
     setErrors(localErrs)
     if (hasErrors(localErrs)) return
 
-    // Only LLM-validate fields that were manually typed (not from suggestions)
+    // 只用大模型验证手动输入的字段（不验证来自建议的字段）
     const trusted = trustedValues.current
     const validateProduct = !trusted.has(product.trim())
     const validateObjective = !trusted.has(objective.trim())
@@ -177,7 +177,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
           return
         }
       } catch {
-        // If validation call itself fails, allow through — don't block the user
+        // 如果验证调用本身失败，则允许继续，避免阻塞用户
       } finally {
         setIsValidating(false)
       }
@@ -201,7 +201,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         fontSize: 13,
       }}
     >
-      {/* Logo row */}
+      {/* 徽标行 */}
       <div
         className="flex items-center justify-between px-4"
         style={{ borderBottom: '1px solid #1E1E2E', height: 48, flexShrink: 0 }}
@@ -230,9 +230,9 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         />
       </div>
 
-      {/* Form body */}
+      {/* 表单主体 */}
       <div className="flex flex-col gap-5 p-4 flex-1 overflow-y-auto">
-        {/* Product */}
+        {/* 产品 */}
         <SidebarSection
           error={errors.product}
           label="产品"
@@ -287,7 +287,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
           )}
         </SidebarSection>
 
-        {/* Objective */}
+        {/* 目标 */}
         <SidebarSection label="目标" error={errors.objective}>
           <textarea
             value={objective}
@@ -318,7 +318,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
           )}
         </SidebarSection>
 
-        {/* Segments */}
+        {/* 细分市场 */}
         <SidebarSection label="客户群体" error={errors.segments?.join(' · ')}>
           <div className="flex flex-col gap-1">
             {segments.map((seg) => (
@@ -341,7 +341,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
               </div>
             ))}
 
-            {/* Add segment input */}
+            {/* 添加细分市场的输入框 */}
             {segments.length < 6 && (
               <div className="flex flex-col gap-1 mt-1">
                 <div className="flex items-center gap-1.5">
@@ -392,7 +392,7 @@ export function Sidebar({ onRun, onProviderInit, isRunning }: Props) {
         </SidebarSection>
       </div>
 
-      {/* Run CTA */}
+      {/* 运行操作按钮 */}
       <div className="p-4" style={{ borderTop: '1px solid #1E1E2E' }}>
         <button
           onClick={handleRun}

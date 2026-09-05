@@ -25,7 +25,7 @@ export function RegionDetailPanel({ region, onClose }: Props) {
       height: '100%', display: 'flex', flexDirection: 'column',
       background: '#0A0A0F', borderLeft: '1px solid #1E1E2E',
     }}>
-      {/* Header */}
+      {/* 页头 */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '8px 14px', borderBottom: '1px solid #1E1E2E', flexShrink: 0,
@@ -51,11 +51,11 @@ export function RegionDetailPanel({ region, onClose }: Props) {
         </div>
       </div>
 
-      {/* Scrollable body */}
+      {/* 可滚动主体 */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <div style={{ padding: '14px' }}>
 
-          {/* Score bar */}
+          {/* 评分条 */}
           <div style={{ height: 2, background: '#1E1E2E', borderRadius: 2, marginBottom: 6 }}>
             <motion.div
               initial={{ width: 0 }}
@@ -65,7 +65,7 @@ export function RegionDetailPanel({ region, onClose }: Props) {
             />
           </div>
 
-          {/* Fit label */}
+          {/* 匹配度标签 */}
           <span style={{
             color: fitColor, fontSize: 9, fontFamily: 'var(--font-mono)',
             textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', marginBottom: 16,
@@ -74,7 +74,7 @@ export function RegionDetailPanel({ region, onClose }: Props) {
             {fitLabel}
           </span>
 
-          {/* Explanation */}
+          {/* 说明 */}
           {region.explanation ? (
             <div style={{
               background: '#0D0D16', border: '0.5px solid #1E1E2E',
@@ -92,7 +92,7 @@ export function RegionDetailPanel({ region, onClose }: Props) {
             </div>
           ) : null}
 
-          {/* Key factors */}
+          {/* 关键因素 */}
           <div style={{
             color: '#6A6A8A', fontSize: 9, fontFamily: 'var(--font-mono)',
             textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10,
